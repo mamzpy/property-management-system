@@ -1,0 +1,157 @@
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: property_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: property_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d property_management"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Auth Service (NEW)
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth_service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    env_file:
+      - ./services/auth-service/.env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3004/auth/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Property Service
+  property-service:
+    build:
+      context: ./services/property-service
+      dockerfile: Dockerfile
+    container_name: property_service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./services/property-service/.env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/properties/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Tenant Service
+  tenant-service:
+    build:
+      context: ./services/tenant-service
+      dockerfile: Dockerfile
+    container_name: tenant_service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./services/tenant-service/.env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3002/tenants/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Maintenance Service
+  maintenance-service:
+    build:
+      context: ./services/maintenance-service
+      dockerfile: Dockerfile
+    container_name: maintenance_service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./services/maintenance-service/.env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3003/maintenance/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # API Gateway Service
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: property_api_gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./services/api-gateway/.env.docker
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      property-service:
+        condition: service_healthy
+      tenant-service:
+        condition: service_healthy
+      maintenance-service:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  property_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
