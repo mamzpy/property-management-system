@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: property_management
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: devpassword
+      POSTGRES_PASSWORD: Mey12345.
     ports:
       - "5432:5432"
     volumes:
@@ -22,7 +22,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # Auth Service (NEW)
+  # Auth Service 
   auth-service:
     build:
       context: ./services/auth-service
@@ -119,6 +119,32 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+        # Booking Service (NEW)
+  booking-service:
+    build:
+      context: ./services/booking-service
+      dockerfile: Dockerfile
+    container_name: booking_service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    env_file:
+      - ./services/booking-service/.env.docker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3005/bookings/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 
   # API Gateway Service
   api-gateway:
