@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { TenantService } from './tenant.service';
-import { Tenant } from 'entities/tenant.entity';
+import { Tenant } from 'src/entities/tenant.entity';
 
 @Controller('tenants')
 export class TenantController {
