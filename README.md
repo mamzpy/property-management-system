@@ -3,6 +3,23 @@
 A production-grade microservices platform for managing rental properties, tenants, bookings, and maintenance operations. Designed using NestJS, TypeScript, PostgreSQL, and Docker, following modern distributed system architecture principles.
 
 ## Overview
+Architecture Diagram
+
+
+                  ┌────────────────────────────┐
+                  │        API Gateway          │
+                  │          :3000              │
+                  └──────────────┬──────────────┘
+                                 │
+      ┌──────────────┬───────────┴───────────┬──────────────┬──────────────┐
+      │              │                       │              │              │
+ ┌────▼────┐   ┌─────▼────┐           ┌──────▼────┐   ┌──────▼────┐   ┌────▼────┐
+ │  Auth   │   │ Property │           │  Tenant    │   │Maintenance│   │ Booking │
+ │ :3004   │   │ :3001    │           │ :3002      │   │ :3003     │   │ :3005   │
+ └─────────┘   └──────────┘           └────────────┘   └───────────┘   └─────────┘
+                                 Shared PostgreSQL DB :5432
+
+
 
 This system provides a scalable backend solution capable of handling:
 
