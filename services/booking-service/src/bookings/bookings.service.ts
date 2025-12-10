@@ -2,17 +2,21 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from '../entities/booking.entity';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class BookingService {
+  private readonly tenantServiceUrl: string;
+
   constructor(
     @InjectRepository(Booking)
     private bookingRepository: Repository<Booking>,
-  ) {}
+    private readonly httpService: HttpService, // 👈 added
+  ) {
+    this.tenantServiceUrl =
+      process.env.TENANT_SERVICE_URL || 'http://tenant-service:3002';
+  }
 
-  /**
-   * TENANT creates a booking request
-   */
   async create(propertyId: number, tenantId: string): Promise<Booking> {
     const booking = this.bookingRepository.create({
       propertyId,
@@ -23,25 +27,16 @@ export class BookingService {
     return this.bookingRepository.save(booking);
   }
 
-  /**
-   * ADMIN views all bookings
-   */
   async findAll(): Promise<Booking[]> {
     return this.bookingRepository.find();
   }
 
-  /**
-   * ADMIN sees pending requests
-   */
   async findPending(): Promise<Booking[]> {
     return this.bookingRepository.find({
       where: { status: BookingStatus.PENDING },
     });
   }
 
-  /**
-   * ADMIN approves booking
-   */
   async approve(id: string, adminId: string): Promise<Booking> {
     const booking = await this.bookingRepository.findOneBy({ id });
 
@@ -53,12 +48,28 @@ export class BookingService {
     booking.approvedAt = new Date();
     booking.approvedBy = adminId;
 
-    return this.bookingRepository.save(booking);
+    const saved = await this.bookingRepository.save(booking);
+
+    try {
+      await this.httpService.axiosRef.post(
+        `${this.tenantServiceUrl}/tenants`,
+        {
+          userId: saved.tenantId,
+          propertyId: saved.propertyId,
+          status: 'active',
+        },
+      );
+      console.log(`Tenant created for user ${saved.tenantId}`);
+    } catch (err) {
+      console.error(
+        `Failed to create tenant for booking ${saved.id}`,
+        err?.message || err,
+      );
+    }
+
+    return saved;
   }
 
-  /**
-   * ADMIN rejects booking
-   */
   async reject(id: string, reason?: string): Promise<Booking> {
     const booking = await this.bookingRepository.findOneBy({ id });
 
