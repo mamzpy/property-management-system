@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  test:
+    name: Run Unit Tests for All Services
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      # ===== Booking Service =====
+      - name: Install Booking Service dependencies
+        working-directory: ./services/booking-service
+        run: npm install
+
+      - name: Run Booking Service tests
+        working-directory: ./services/booking-service
+        run: npm run test --if-present
+
+      # ===== Property Service =====
+      - name: Install Property Service dependencies
+        working-directory: ./services/property-service
+        run: npm install
+
+      - name: Run Property Service tests
+        working-directory: ./services/property-service
+        run: npm run test --if-present
+
+      
