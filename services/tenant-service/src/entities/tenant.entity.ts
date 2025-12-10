@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('tenants')
 export class Tenant {
@@ -6,15 +12,21 @@ export class Tenant {
   id: number;
 
   @Column()
+  userId: string;
+
+  @Column()
+  propertyId: number;
+
+  @Column({ nullable: true })
   firstName: string;
 
-  @Column()
+  @Column({ nullable: true })
   lastName: string;
 
-  @Column()
+  @Column({ nullable: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
   @Column({ nullable: true })
@@ -24,7 +36,7 @@ export class Tenant {
   emergencyPhone: string;
 
   @Column({ default: 'active' })
-  status: string; // active, inactive, evicted
+  status: string; 
 
   @CreateDateColumn()
   createdAt: Date;
