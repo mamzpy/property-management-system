@@ -1,6 +1,7 @@
-
 services:
-  # PostgreSQL Database
+  # =========================
+  # Shared PostgreSQL (v1.0)
+  # =========================
   postgres:
     image: postgres:15-alpine
     container_name: property_postgres
@@ -9,8 +10,7 @@ services:
       POSTGRES_DB: property_management
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Mey12345.
-    ports:
-      - "5432:5432"
+   
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -22,7 +22,62 @@ services:
       retries: 5
       start_period: 30s
 
-  # Auth Service 
+  # =========================
+  # Database per Service (v2 preparation)
+  # =========================
+  auth-postgres:
+    image: postgres:15-alpine
+    container_name: auth_postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mey12345.
+    networks:
+      - property_network
+
+  property-postgres:
+    image: postgres:15-alpine
+    container_name: property_service_postgres
+    environment:
+      POSTGRES_DB: property_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mey12345.
+    networks:
+      - property_network
+
+  tenant-postgres:
+    image: postgres:15-alpine
+    container_name: tenant_service_postgres
+    environment:
+      POSTGRES_DB: tenant_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mey12345.
+    networks:
+      - property_network
+
+  booking-postgres:
+    image: postgres:15-alpine
+    container_name: booking_service_postgres
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mey12345.
+    networks:
+      - property_network
+
+  maintenance-postgres:
+    image: postgres:15-alpine
+    container_name: maintenance_service_postgres
+    environment:
+      POSTGRES_DB: maintenance_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Mey12345.
+    networks:
+      - property_network
+
+  # =========================
+  # Auth Service
+  # =========================
   auth-service:
     build:
       context: ./services/auth-service
@@ -45,7 +100,9 @@ services:
       retries: 3
       start_period: 40s
 
+  # =========================
   # Property Service
+  # =========================
   property-service:
     build:
       context: ./services/property-service
@@ -70,7 +127,9 @@ services:
       retries: 3
       start_period: 40s
 
+  # =========================
   # Tenant Service
+  # =========================
   tenant-service:
     build:
       context: ./services/tenant-service
@@ -95,7 +154,9 @@ services:
       retries: 3
       start_period: 40s
 
+  # =========================
   # Maintenance Service
+  # =========================
   maintenance-service:
     build:
       context: ./services/maintenance-service
@@ -120,7 +181,9 @@ services:
       retries: 3
       start_period: 60s
 
-        # Booking Service (NEW)
+  # =========================
+  # Booking Service
+  # =========================
   booking-service:
     build:
       context: ./services/booking-service
@@ -145,8 +208,9 @@ services:
       retries: 3
       start_period: 40s
 
-
-  # API Gateway Service
+  # =========================
+  # API Gateway
+  # =========================
   api-gateway:
     build:
       context: ./services/api-gateway
