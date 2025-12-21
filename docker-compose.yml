@@ -143,8 +143,8 @@ services:
     env_file:
       - ./services/tenant-service/.env.docker
     depends_on:
-      postgres:
-        condition: service_healthy
+      tenant-postgres:
+        condition: service_started
       auth-service:
         condition: service_healthy
     networks:
