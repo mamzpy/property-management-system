@@ -115,10 +115,11 @@ services:
     env_file:
       - ./services/property-service/.env.docker
     depends_on:
-      postgres:
-        condition: service_healthy
-      auth-service:
-        condition: service_healthy
+       property-postgres:
+         condition: service_started
+       auth-service:
+         condition: service_healthy
+      
     networks:
       - property_network
     healthcheck:
