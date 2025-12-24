@@ -170,8 +170,8 @@ services:
     env_file:
       - ./services/maintenance-service/.env.docker
     depends_on:
-      postgres:
-        condition: service_healthy
+      maintenance-postgres:
+        condition: service_started
       auth-service:
         condition: service_healthy
     networks:
