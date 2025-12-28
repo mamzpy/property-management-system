@@ -22,6 +22,17 @@ services:
       retries: 5
       start_period: 30s
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: property_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"      # RabbitMQ main port
+      - "15672:15672"    # RabbitMQ management UI
+    networks:
+      - property_network
+
+
   # =========================
   # Database per Service (v2 preparation)
   # =========================
@@ -74,6 +85,7 @@ services:
       POSTGRES_PASSWORD: Mey12345.
     networks:
       - property_network
+
 
   # =========================
   # Auth Service

@@ -25,6 +25,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "amqplib": "^0.10.9",
     "axios": "^1.10.0",
     "jsonwebtoken": "^9.0.3",
     "reflect-metadata": "^0.2.2",

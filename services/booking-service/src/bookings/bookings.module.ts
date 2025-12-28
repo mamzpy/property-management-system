@@ -4,11 +4,12 @@ import { HttpModule } from '@nestjs/axios';
 import { Booking } from '../entities/booking.entity';
 import { BookingService } from './bookings.service';
 import { BookingController } from './bookings.controller';
+import { RabbitMQModule } from '@shared/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booking]),
-    HttpModule, 
+    RabbitMQModule,
   ],
   controllers: [BookingController],
   providers: [BookingService],

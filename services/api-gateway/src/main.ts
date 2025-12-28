@@ -1,10 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { randomUUID } from 'crypto';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  // Add CORS configuration
+
   app.enableCors({
     origin: [
       'http://localhost:5173',
@@ -22,8 +24,18 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3000;
-  
-  // Listen on all interfaces for Docker
+
+  app.use((req, res, next) => {
+  const correlationId =
+    (req.headers['x-correlation-id'] as string) || randomUUID();
+
+  req.headers['x-correlation-id'] = correlationId;
+  res.setHeader('x-correlation-id', correlationId);
+
+  next();
+});
+
+
   await app.listen(port, '0.0.0.0');
   console.log(`API Gateway running on port ${port}`);
 }
