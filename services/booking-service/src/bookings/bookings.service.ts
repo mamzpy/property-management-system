@@ -1,30 +1,51 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking, BookingStatus } from '../entities/booking.entity';
-import { HttpService } from '@nestjs/axios';
+import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class BookingService {
-  private readonly tenantServiceUrl: string;
+  private readonly logger = new Logger(BookingService.name);
 
   constructor(
     @InjectRepository(Booking)
-    private bookingRepository: Repository<Booking>,
-    private readonly httpService: HttpService, // 👈 added
-  ) {
-    this.tenantServiceUrl =
-      process.env.TENANT_SERVICE_URL || 'http://tenant-service:3002';
-  }
+    private readonly bookingRepository: Repository<Booking>,
+    private readonly rabbitMQService: RabbitMQService,
+  ) {}
 
-  async create(propertyId: number, tenantId: string): Promise<Booking> {
+  // ✅ CREATE BOOKING + booking.created
+  async create(
+    propertyId: number,
+    tenantId: string,
+    correlationId: string,
+  ): Promise<Booking> {
     const booking = this.bookingRepository.create({
       propertyId,
       tenantId,
       status: BookingStatus.PENDING,
     });
 
-    return this.bookingRepository.save(booking);
+    const savedBooking = await this.bookingRepository.save(booking);
+
+    this.logger.log(
+      `[CID=${correlationId}] Booking created: ${savedBooking.id}`,
+    );
+
+    await this.rabbitMQService.publish(
+      'booking',
+      'booking.created',
+      {
+        bookingId: savedBooking.id,
+        propertyId: savedBooking.propertyId,
+        tenantId: savedBooking.tenantId,
+        status: savedBooking.status,
+        correlationId,
+        occurredAt: new Date().toISOString(),
+      },
+    );
+
+    return savedBooking;
   }
 
   async findAll(): Promise<Booking[]> {
@@ -37,7 +58,12 @@ export class BookingService {
     });
   }
 
-  async approve(id: string, adminId: string): Promise<Booking> {
+  // ✅ APPROVE BOOKING + booking.approved
+  async approve(
+    id: string,
+    adminId: string,
+    correlationId: string,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOneBy({ id });
 
     if (!booking) {
@@ -50,22 +76,21 @@ export class BookingService {
 
     const saved = await this.bookingRepository.save(booking);
 
-    try {
-      await this.httpService.axiosRef.post(
-        `${this.tenantServiceUrl}/tenants`,
-        {
-          userId: saved.tenantId,
-          propertyId: saved.propertyId,
-          status: 'active',
-        },
-      );
-      console.log(`Tenant created for user ${saved.tenantId}`);
-    } catch (err) {
-      console.error(
-        `Failed to create tenant for booking ${saved.id}`,
-        err?.message || err,
-      );
-    }
+    this.logger.log(
+      `[CID=${correlationId}] Booking approved: ${saved.id}`,
+    );
+
+    await this.rabbitMQService.publish(
+      'booking',
+      'booking.approved',
+      {
+        bookingId: saved.id,
+        tenantId: saved.tenantId,
+        propertyId: saved.propertyId,
+        approvedAt: saved.approvedAt,
+        correlationId,
+      },
+    );
 
     return saved;
   }
