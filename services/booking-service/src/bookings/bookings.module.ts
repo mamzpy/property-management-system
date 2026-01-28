@@ -5,6 +5,9 @@ import { Booking } from '../entities/booking.entity';
 import { BookingService } from './bookings.service';
 import { BookingController } from './bookings.controller';
 import { RabbitMQModule } from '@shared/rabbitmq/rabbitmq.module';
+import { RedisLockService } from '../redis/redis-lock.service';
+import { RedisService } from '../redis/redis.service';
+
 
 @Module({
   imports: [
@@ -12,6 +15,6 @@ import { RabbitMQModule } from '@shared/rabbitmq/rabbitmq.module';
     RabbitMQModule,
   ],
   controllers: [BookingController],
-  providers: [BookingService],
+  providers: [BookingService,RabbitMQService,RedisService,RedisLockService],
 })
 export class BookingModule {}

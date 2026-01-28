@@ -1,7 +1,5 @@
 services:
-  # =========================
-  # Shared PostgreSQL (v1.0)
-  # =========================
+
   postgres:
     image: postgres:15-alpine
     container_name: property_postgres
@@ -32,10 +30,19 @@ services:
     networks:
       - property_network
 
+  redis:
+    image: redis:7-alpine
+    container_name: property_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"   
+    networks:
+      - property_network
+    command: redis-server --appendonly no
+    
 
-  # =========================
-  # Database per Service (v2 preparation)
-  # =========================
+
+
   auth-postgres:
     image: postgres:15-alpine
     container_name: auth_postgres
@@ -87,9 +94,6 @@ services:
       - property_network
 
 
-  # =========================
-  # Auth Service
-  # =========================
   auth-service:
     build:
       context: ./services/auth-service
@@ -113,9 +117,7 @@ services:
       start_period: 40s
 
 
-  # =========================
-  # Property Service
-  # =========================
+
   property-service:
     build:
       context: ./services/property-service
@@ -141,9 +143,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # =========================
-  # Tenant Service
-  # =========================
+
   tenant-service:
     build:
       context: ./services/tenant-service
@@ -195,9 +195,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # =========================
-  # Booking Service
-  # =========================
+
   booking-service:
     build:
       context: ./services/booking-service
@@ -222,9 +220,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # =========================
-  # API Gateway
-  # =========================
+ 
   api-gateway:
     build:
       context: ./services/api-gateway
