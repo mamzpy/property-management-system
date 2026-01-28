@@ -1,9 +1,9 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Patch, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
   Param,
   Headers,
 } from '@nestjs/common';
@@ -28,10 +28,12 @@ export class BookingController {
   create(
     @Body() createBookingDto: CreateBookingDto,
     @Headers('x-user-id') userId: string,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
     return this.bookingService.create(
       createBookingDto.propertyId,
       userId,
+      correlationId || 'booking-create-no-cid',
     );
   }
 
@@ -39,8 +41,13 @@ export class BookingController {
   approve(
     @Param('id') id: string,
     @Headers('x-user-id') adminId: string,
+    @Headers('x-correlation-id') correlationId?: string,
   ) {
-    return this.bookingService.approve(id, adminId);
+    return this.bookingService.approve(
+      id,
+      adminId,
+      correlationId || 'booking-approve-no-cid',
+    );
   }
 
   @Patch(':id/reject')
@@ -52,8 +59,7 @@ export class BookingController {
   }
 
   @Get('health')
-health() {
-  return { status: 'ok', service: 'booking-service' };
-}
-
+  health() {
+    return { status: 'ok', service: 'booking-service' };
+  }
 }
