@@ -33,8 +33,10 @@ describe('Booking Service (e2e)', () => {
   });
 
   afterAll(async () => {
+  if (app) {
     await app.close();
-  });
+  }
+});
 
   it('/bookings/health (GET) should return 200', () => {
     return request(app.getHttpServer()).get('/bookings/health').expect(200);

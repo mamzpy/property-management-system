@@ -10,20 +10,24 @@ import { HealthModule } from './health/health.module';
       isGlobal: true,
     }),
 
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DATABASE_HOST'),
-        port: config.get<number>('DATABASE_PORT'),
-        username: config.get<string>('DATABASE_USERNAME'),
-        password: config.get<string>('DATABASE_PASSWORD'),
-        database: config.get<string>('DATABASE_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
-    }),
+   TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => ({
+    type: 'postgres',
+    host: config.get<string>('DATABASE_HOST') || 'localhost',
+    port: parseInt(config.get<string>('DATABASE_PORT') || '5432', 10),
+    username: config.get<string>('DATABASE_USERNAME') || 'postgres',
+    password: config.get<string>('DATABASE_PASSWORD') || 'postgres',
+    database: config.get<string>('DATABASE_NAME') || 'booking_e2e',
+
+    autoLoadEntities: true,
+    synchronize: true,
+
+    retryAttempts: 0,
+    retryDelay: 0,
+  }),
+}),
 
     BookingModule,
     HealthModule, 
