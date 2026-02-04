@@ -1,0 +1,64 @@
+name: Booking Service E2E Tests
+
+on:
+  pull_request:
+    paths:
+      - "services/booking-service/**"
+  push:
+    branches: [ "feature/v2-upgrade" ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        ports:
+          - 55432:5432
+        env:
+          POSTGRES_DB: booking_e2e
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres -d booking_e2e"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 55672:5672
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        working-directory: services/booking-service
+        run: npm install
+
+      - name: Run E2E tests
+        working-directory: services/booking-service
+        env:
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 55432
+          DATABASE_USERNAME: postgres
+          DATABASE_PASSWORD: postgres
+          DATABASE_NAME: booking_e2e
+          RABBITMQ_URL: amqp://localhost:55672
+          NODE_ENV: test
+        run: npm run test:e2e
