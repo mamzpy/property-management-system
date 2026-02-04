@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Booking } from './entities/booking.entity';
 import { BookingModule } from './bookings/bookings.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -21,11 +21,12 @@ import { BookingModule } from './bookings/bookings.module';
         password: config.get<string>('DATABASE_PASSWORD'),
         database: config.get<string>('DATABASE_NAME'),
         autoLoadEntities: true,
-        synchronize: true, // ok for dev
+        synchronize: true,
       }),
     }),
 
     BookingModule,
+    HealthModule, 
   ],
 })
 export class AppModule {}

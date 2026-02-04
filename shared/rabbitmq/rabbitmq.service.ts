@@ -1,44 +1,57 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Connection, Channel, connect } from 'amqplib';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import * as amqp from 'amqplib';
+import type { Channel, ChannelModel, ConsumeMessage } from 'amqplib';
 
 @Injectable()
 export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
-  private connection: Connection;
-  private channel: Channel;
+  private connection!: ChannelModel;
+  private channel!: Channel;
 
   async onModuleInit() {
-    this.connection = await connect('amqp://rabbitmq:5672');
+    const url = process.env.RABBITMQ_URL || 'amqp://rabbitmq:5672';
+    this.connection = await amqp.connect(url);
     this.channel = await this.connection.createChannel();
   }
 
-  async publish(exchange: string, routingKey: string, message: any) {
+  async publish(exchange: string, routingKey: string, message: unknown) {
     await this.channel.assertExchange(exchange, 'topic', { durable: true });
-    this.channel.publish(exchange, routingKey, Buffer.from(JSON.stringify(message)));
+    this.channel.publish(
+      exchange,
+      routingKey,
+      Buffer.from(JSON.stringify(message)),
+      { persistent: true },
+    );
   }
 
   async subscribe(
     exchange: string,
     routingKey: string,
     queueName: string,
-    handler: (msg: any) => Promise<void>,
+    handler: (payload: any) => Promise<void>,
   ) {
     await this.channel.assertExchange(exchange, 'topic', { durable: true });
     const q = await this.channel.assertQueue(queueName, { durable: true });
-
     await this.channel.bindQueue(q.queue, exchange, routingKey);
 
-    this.channel.consume(q.queue, async (message) => {
-      if (!message) return;
+    await this.channel.consume(q.queue, async (msg: ConsumeMessage | null) => {
+      if (!msg) return;
 
-      const payload = JSON.parse(message.content.toString());
-      await handler(payload);
-
-      this.channel.ack(message);
+      try {
+        const payload = JSON.parse(msg.content.toString());
+        await handler(payload);
+        this.channel.ack(msg);
+      } catch (err) {
+        // don’t lose message if handler crashes
+        this.channel.nack(msg, false, true);
+      }
     });
   }
 
   async onModuleDestroy() {
-    await this.channel.close();
-    await this.connection.close();
+    try {
+      await this.channel?.close();
+    } finally {
+      await this.connection?.close();
+    }
   }
 }
