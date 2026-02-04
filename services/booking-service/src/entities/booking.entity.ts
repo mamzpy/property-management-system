@@ -24,13 +24,11 @@ export class Booking {
   tenantId: string;
 
   @Column({
-    type: 'enum',
-    enum: BookingStatus,
-    default: BookingStatus.PENDING,
+  type: process.env.NODE_ENV === 'test' ? 'text' : 'enum',
+  enum: process.env.NODE_ENV === 'test' ? undefined : BookingStatus,
   })
   status: BookingStatus;
 
-  // ⭐ ADD THESE:
   @Column({ type: 'timestamp', nullable: true })
   approvedAt?: Date; // When admin approved
 

@@ -15,6 +15,7 @@ constructor(
   @InjectRepository(Booking)
   private readonly bookingRepository: Repository<Booking>,
   private readonly redisLockService: RedisLockService,
+  private readonly rabbitMQService: RabbitMQService
 ) {}
 
 
