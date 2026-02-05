@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "services/booking-service/**"
+      - "shared/**"
+      - ".github/workflows/booking-e2e.yml"
   push:
     branches: [ "feature/v2-upgrade" ]
 
@@ -38,19 +40,20 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
-  steps:
-   - uses: actions/checkout@v4
 
-   - name: Use Node.js 18
-     uses: actions/setup-node@v4
-     with:
-      node-version: 18
- 
-   - name: Install dependencies (root)
-     run: npm ci
+    steps:
+      - uses: actions/checkout@v4
 
-   - name: Run E2E tests (booking-service)
-     run: npm run test:e2e --workspace services/booking-service
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Run E2E tests (booking-service)
         env:
           DATABASE_HOST: localhost
           DATABASE_PORT: 55432
@@ -59,4 +62,4 @@ jobs:
           DATABASE_NAME: booking_e2e
           RABBITMQ_URL: amqp://localhost:55672
           NODE_ENV: test
-        run: npm run test:e2e
+        run: npm run test:e2e --workspace services/booking-service
