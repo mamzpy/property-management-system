@@ -38,21 +38,19 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
+  steps:
+   - uses: actions/checkout@v4
 
-    steps:
-      - uses: actions/checkout@v4
+   - name: Use Node.js 18
+     uses: actions/setup-node@v4
+     with:
+      node-version: 18
+ 
+   - name: Install dependencies (root)
+     run: npm ci
 
-      - name: Use Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        working-directory: services/booking-service
-        run: npm install
-
-      - name: Run E2E tests
-        working-directory: services/booking-service
+   - name: Run E2E tests (booking-service)
+     run: npm run test:e2e --workspace services/booking-service
         env:
           DATABASE_HOST: localhost
           DATABASE_PORT: 55432

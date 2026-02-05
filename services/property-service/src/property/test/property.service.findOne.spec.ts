@@ -4,6 +4,7 @@ import { Property } from '../../entities/property.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
 
 describe('PropertyService - findOne()', () => {
   let propertyService: PropertyService;
@@ -21,6 +22,13 @@ describe('PropertyService - findOne()', () => {
           provide: getRepositoryToken(Property),
           useValue: mockRepository,
         },
+        {
+          provide: RabbitMQService,
+          useValue: {
+            publish: jest.fn(),
+            subscribe: jest.fn(),
+  },
+},
       ],
     }).compile();
 
