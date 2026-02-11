@@ -7,7 +7,7 @@ on:
       - "shared/**"
       - ".github/workflows/booking-e2e.yml"
   push:
-    branches: [ "feature/v2-upgrade" ]
+    branches: ["feature/v2-upgrade"]
 
 jobs:
   e2e:
@@ -23,23 +23,20 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
-          --health-cmd "pg_isready -U postgres -d booking_e2e"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+          --health-cmd="pg_isready -U postgres -d booking_e2e"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
       rabbitmq:
         image: rabbitmq:3-management
         ports:
           - 55672:5672
-        env:
-          RABBITMQ_DEFAULT_USER: guest
-          RABBITMQ_DEFAULT_PASS: guest
         options: >-
-          --health-cmd "rabbitmq-diagnostics -q ping"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+          --health-cmd="rabbitmq-diagnostics -q ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - uses: actions/checkout@v4
@@ -48,18 +45,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "npm"
+          cache: npm
 
       - name: Install dependencies (root)
         run: npm ci
 
-      - name: Run E2E tests (booking-service)
+      - name: Run Booking Service E2E
+        run: npm run test:e2e -w booking-service
         env:
+          NODE_ENV: test
           DATABASE_HOST: localhost
           DATABASE_PORT: 55432
           DATABASE_USERNAME: postgres
           DATABASE_PASSWORD: postgres
           DATABASE_NAME: booking_e2e
           RABBITMQ_URL: amqp://localhost:55672
-          NODE_ENV: test
-        run: npm run test:e2e --workspace services/booking-service
