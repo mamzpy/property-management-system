@@ -8,12 +8,12 @@ import { DataSource } from 'typeorm';
 describe('Booking Service (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let rabbitMq: { publish: jest.Mock; subscribe: jest.Mock };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
+      // Keep mock so tests don't need real rabbit connection
       .overrideProvider(RabbitMQService)
       .useValue({
         publish: jest.fn().mockResolvedValue(undefined),
@@ -25,18 +25,20 @@ describe('Booking Service (e2e)', () => {
     await app.init();
 
     dataSource = app.get(DataSource);
-    rabbitMq = app.get(RabbitMQService) as any;
   });
 
+  // ✅ CLEAN DB BEFORE EACH TEST (REAL-WORLD E2E STYLE)
   beforeEach(async () => {
+    // outbox first, then bookings
+    await dataSource.query('TRUNCATE TABLE outbox_events CASCADE;');
     await dataSource.query('TRUNCATE TABLE bookings CASCADE;');
   });
 
   afterAll(async () => {
-  if (app) {
-    await app.close();
-  }
-});
+    if (app) {
+      await app.close();
+    }
+  });
 
   it('/bookings/health (GET) should return 200', () => {
     return request(app.getHttpServer()).get('/bookings/health').expect(200);
@@ -61,14 +63,16 @@ describe('Booking Service (e2e)', () => {
         status: 'pending',
       }),
     );
+
+    expect(res.body.id).toBeDefined();
   });
 
   /**
-   * WORKFLOW TEST
-   * create → approve → verify publish()
+   * WORKFLOW TEST (Real company style with Outbox)
+   * create → approve → verify outbox row exists
    */
-  it('workflow: create -> approve should update status and publish event', async () => {
-    // 1) create
+  it('workflow: create -> approve should update status and create outbox event', async () => {
+    // 1) create booking
     const created = await request(app.getHttpServer())
       .post('/bookings')
       .set('x-user-id', 'tenant-123')
@@ -77,9 +81,10 @@ describe('Booking Service (e2e)', () => {
       .expect(201);
 
     const bookingId = created.body.id;
+    expect(bookingId).toBeDefined();
     expect(created.body.status).toBe('pending');
 
-    // 2) approve
+    // 2) approve booking
     const approved = await request(app.getHttpServer())
       .patch(`/bookings/${bookingId}/approve`)
       .set('x-user-id', 'admin-1')
@@ -90,16 +95,27 @@ describe('Booking Service (e2e)', () => {
     expect(approved.body.approvedBy).toBe('admin-1');
     expect(approved.body.approvedAt).toBeDefined();
 
-    // 3) assert publish()
-    expect(rabbitMq.publish).toHaveBeenCalledWith(
-      'booking',
-      'booking.approved',
-      expect.objectContaining({
-        bookingId,
-        tenantId: 'tenant-123',
-        propertyId: 10,
-        correlationId: 'e2e-wf-1',
-      }),
-    );
+    // 3) assert OUTBOX row created (instead of publish called)
+    const rows = await dataSource.query(
+  `SELECT "eventType", "aggregateId", status, payload
+   FROM outbox_events
+   WHERE "eventType" = $1 AND "aggregateId" = $2
+   LIMIT 1`,
+  ['booking.approved', bookingId],
+);
+
+expect(rows.length).toBe(1);
+expect(rows[0].eventType).toBe('booking.approved');
+expect(rows[0].aggregateId).toBe(bookingId);
+expect(rows[0].status).toBe('pending');
+
+expect(rows[0].payload).toEqual(
+  expect.objectContaining({
+    bookingId,
+    tenantId: 'tenant-123',
+    propertyId: 10,
+    correlationId: 'e2e-wf-1',
+  }),
+);
   });
 });
