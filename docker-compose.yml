@@ -1,85 +1,32 @@
+version: "3.9"
+
 services:
-
-  postgres:
-    image: postgres:15-alpine
-    container_name: property_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: property_management
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mey12345.
-   
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - property_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d property_management"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: property_rabbitmq
-    restart: unless-stopped
-    ports:
-      - "5672:5672"      # RabbitMQ main port
-      - "15672:15672"    # RabbitMQ management UI
-    networks:
-      - property_network
-
-  redis:
-    image: redis:7-alpine
-    container_name: property_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"   
-    networks:
-      - property_network
-    command: redis-server --appendonly no
-    
-
-
-
+  # =========================
+  # Postgres Databases
+  # =========================
   auth-postgres:
     image: postgres:15-alpine
     container_name: auth_postgres
     environment:
       POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mey12345.
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - property_network
 
   property-postgres:
     image: postgres:15-alpine
-    container_name: property_service_postgres
+    container_name: property_postgres
     environment:
       POSTGRES_DB: property_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mey12345.
-    networks:
-      - property_network
-
-  tenant-postgres:
-    image: postgres:15-alpine
-    container_name: tenant_service_postgres
-    environment:
-      POSTGRES_DB: tenant_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mey12345.
-    networks:
-      - property_network
-
-  booking-postgres:
-    image: postgres:15-alpine
-    container_name: booking_service_postgres
-    environment:
-      POSTGRES_DB: booking_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mey12345.
+      POSTGRES_USER: property_user
+      POSTGRES_PASSWORD: property_pass
+    ports:
+      - "5434:5432"
     networks:
       - property_network
 
@@ -88,99 +35,124 @@ services:
     container_name: maintenance_service_postgres
     environment:
       POSTGRES_DB: maintenance_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mey12345.
+      POSTGRES_USER: maintenance_user
+      POSTGRES_PASSWORD: maintenance_pass
+    ports:
+      - "5435:5432"
     networks:
       - property_network
 
+  booking-postgres:
+    image: postgres:15-alpine
+    container_name: booking_service_postgres
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_pass
+    ports:
+      - "5436:5432"
+    networks:
+      - property_network
 
+  tenant-service-postgres:
+    image: postgres:15-alpine
+    container_name: tenant_service_postgres
+    environment:
+      POSTGRES_DB: tenant_db
+      POSTGRES_USER: tenant_user
+      POSTGRES_PASSWORD: tenant_pass
+    ports:
+      - "5437:5432"
+    networks:
+      - property_network
+
+  # =========================
+  # RabbitMQ
+  # =========================
+  property-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: property_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - property_network
+
+  # =========================
+  # Redis
+  # =========================
+  property-redis:
+    image: redis:7-alpine
+    container_name: property_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - property_network
+
+  # =========================
+  # AUTH SERVICE
+  # =========================
   auth-service:
     build:
       context: ./services/auth-service
       dockerfile: Dockerfile
     container_name: auth_service
     restart: unless-stopped
-    ports:
-      - "3004:3004"
     env_file:
       - ./services/auth-service/.env.docker
+    ports:
+      - "3001:3001"
     depends_on:
       auth-postgres:
         condition: service_started
     networks:
       - property_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3004/auth/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-
-
+  # =========================
+  # PROPERTY SERVICE
+  # =========================
   property-service:
     build:
-      context: ./services/property-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/property-service/Dockerfile
+    env_file: ./services/property-service/.env.docker
     container_name: property_service
     restart: unless-stopped
     ports:
-      - "3001:3001"
-    env_file:
-      - ./services/property-service/.env.docker
-    depends_on:
-       property-postgres:
-         condition: service_started
-       auth-service:
-         condition: service_healthy
-      
-    networks:
-      - property_network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3001/properties/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-
-  tenant-service:
-    build:
-      context: ./services/tenant-service
-      dockerfile: Dockerfile
-    container_name: tenant_service
-    restart: unless-stopped
-    ports:
       - "3002:3002"
-    env_file:
-      - ./services/tenant-service/.env.docker
     depends_on:
-      tenant-postgres:
+      property-postgres:
         condition: service_started
       auth-service:
         condition: service_healthy
     networks:
       - property_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3002/tenants/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3002/properties/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
   # =========================
-  # Maintenance Service
+  # MAINTENANCE SERVICE
   # =========================
   maintenance-service:
     build:
-      context: ./services/maintenance-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/maintenance-service/Dockerfile
+    env_file: ./services/maintenance-service/.env.docker
     container_name: maintenance_service
     restart: unless-stopped
     ports:
       - "3003:3003"
-    env_file:
-      - ./services/maintenance-service/.env.docker
+    
     depends_on:
       maintenance-postgres:
         condition: service_started
@@ -195,22 +167,51 @@ services:
       retries: 3
       start_period: 60s
 
+  # =========================
+  # TENANT SERVICE
+  # =========================
+  tenant-service:
+    build:
+      context: .
+      dockerfile: ./services/tenant-service/Dockerfile
+    env_file: ./services/tenant-service/.env.docker
+    container_name: tenant_service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
 
+    depends_on:
+      tenant-service-postgres:
+        condition: service_started
+      auth-service:
+        condition: service_healthy
+    networks:
+      - property_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3004/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # =========================
+  # BOOKING SERVICE
+  # =========================
   booking-service:
     build:
-      context: ./services/booking-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/booking-service/Dockerfile
+    env_file: ./services/booking-service/.env.docker
     container_name: booking_service
     restart: unless-stopped
     ports:
       - "3005:3005"
-    env_file:
-      - ./services/booking-service/.env.docker
+
     depends_on:
-     booking-postgres:
-      condition: service_started
-     auth-service:
-      condition: service_healthy
+      booking-postgres:
+        condition: service_started
+      auth-service:
+        condition: service_healthy
     networks:
       - property_network
     healthcheck:
@@ -220,7 +221,9 @@ services:
       retries: 3
       start_period: 40s
 
- 
+ # =========================
+  # API GATEWAY
+  # =========================
   api-gateway:
     build:
       context: ./services/api-gateway
@@ -232,14 +235,11 @@ services:
     env_file:
       - ./services/api-gateway/.env.docker
     depends_on:
-      auth-service:
-        condition: service_healthy
-      property-service:
-        condition: service_healthy
-      tenant-service:
-        condition: service_healthy
-      maintenance-service:
-        condition: service_healthy
+      - auth-service
+      - property-service
+      - tenant-service
+      - maintenance-service
+      - booking-service
     networks:
       - property_network
     healthcheck:
