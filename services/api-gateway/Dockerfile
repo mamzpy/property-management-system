@@ -1,42 +1,28 @@
-# Build stage
-FROM node:20-alpine AS builder
+# ---------- BUILDER STAGE ----------
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Install deps for API gateway only
 COPY package*.json ./
+RUN npm install
 
-# Install all dependencies
-RUN npm ci
-
-# Copy source code
+# Copy API gateway source
 COPY . .
 
-# Build the application
+# Build
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
-
-RUN apk add --no-cache curl
+# ---------- RUNTIME STAGE ----------
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+RUN npm install --omit=dev && npm cache clean --force
 
-# Expose port
+ENV NODE_ENV=production
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
-
-# Start the application
-CMD ["node", "dist/main"]
+CMD ["node", "dist/main.js"]
