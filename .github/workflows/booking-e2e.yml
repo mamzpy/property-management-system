@@ -40,18 +40,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: services/booking-service/package-lock.json
 
-      - name: Install dependencies (root)
+      - name: Install dependencies (booking-service)
+        working-directory: services/booking-service
         run: npm ci
 
       - name: Run Booking Service E2E
-        run: npm run test:e2e -w booking-service
+        working-directory: services/booking-service
+        run: npm run test:e2e
         env:
           NODE_ENV: test
           DATABASE_HOST: localhost
@@ -60,3 +63,4 @@ jobs:
           DATABASE_PASSWORD: postgres
           DATABASE_NAME: booking_e2e
           RABBITMQ_URL: amqp://localhost:55672
+     
