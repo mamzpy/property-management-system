@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@pms/shared/rabbitmq/rabbitmq.service';
 import { Property } from 'src/entities/property.entity';
 
 type BookingCreatedPayload = {

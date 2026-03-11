@@ -5,7 +5,7 @@ import { Booking } from '../entities/booking.entity';
 import { BookingService } from './bookings.service';
 import { BookingController } from './bookings.controller';
 
-import { RabbitMQModule } from '@shared/rabbitmq/rabbitmq.module';
+import { RabbitMQModule } from '@pms/shared/rabbitmq/rabbitmq.module';
 import { RedisModule } from '../redis/redis.module';
 import { OutboxModule } from '../outbox/outbox.module';
 

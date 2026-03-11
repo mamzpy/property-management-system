@@ -4,7 +4,7 @@ import { Property } from '../../entities/property.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
-import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@pms/shared/rabbitmq/rabbitmq.service';
 
 describe('PropertyService - findOne()', () => {
   let propertyService: PropertyService;

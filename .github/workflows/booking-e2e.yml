@@ -6,6 +6,8 @@ on:
       - "services/booking-service/**"
       - "shared/**"
       - ".github/workflows/booking-e2e.yml"
+      - "package.json"
+      - "package-lock.json"
   push:
     branches: ["feature/v2-upgrade"]
 
@@ -40,21 +42,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: services/booking-service/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies (booking-service)
-        working-directory: services/booking-service
+      - name: Install dependencies (root)
         run: npm ci
 
       - name: Run Booking Service E2E
-        working-directory: services/booking-service
-        run: npm run test:e2e
+        run: npm run test:e2e -w services/booking-service
         env:
           NODE_ENV: test
           DATABASE_HOST: localhost
@@ -63,4 +63,3 @@ jobs:
           DATABASE_PASSWORD: postgres
           DATABASE_NAME: booking_e2e
           RABBITMQ_URL: amqp://localhost:55672
-     
