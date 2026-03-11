@@ -192,6 +192,26 @@ docker-compose down -v
 docker-compose up --build
 ```
 
+## Deployment
+
+The Property Management System is deployed on AWS EC2 using Docker Compose.
+
+### Live Health Endpoint
+API Gateway:
+http://18.201.231.15:3000/health
+
+### Running Services
+- API Gateway
+- Auth Service
+- Property Service
+- Tenant Service
+- Maintenance Service
+- Booking Service
+- RabbitMQ (event messaging)
+- Redis (caching)
+- PostgreSQL (service databases)
+
+
 ## Database Schema Overview
 
 - **users** — accounts, passwords, roles
