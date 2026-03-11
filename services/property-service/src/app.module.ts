@@ -13,12 +13,12 @@ import { PropertyModule } from './property/property.module';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST || 'localhost',
-      port: parseInt(process.env.DATABASE_PORT || '5432'),
-      username: process.env.DATABASE_USERNAME || 'postgres',
-      password: process.env.DATABASE_PASSWORD || 'devpassword',
-      database: process.env.DATABASE_NAME || 'property_management',
+      port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+      username: process.env.DATABASE_USERNAME || 'property_user',
+      password: process.env.DATABASE_PASSWORD || 'property_pass',
+      database: process.env.DATABASE_NAME || 'property_db',
       autoLoadEntities: true,
-      synchronize: true, // Only for development
+      synchronize: process.env.NODE_ENV !== 'production',
     }),
     PropertyModule,
   ],

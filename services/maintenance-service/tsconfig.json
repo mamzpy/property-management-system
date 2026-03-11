@@ -9,18 +9,13 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["../../shared/*"]
     },
-
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "forceConsistentCasingInFileNames": true
   }
 }

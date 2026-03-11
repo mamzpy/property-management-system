@@ -18,7 +18,7 @@ import { HealthModule } from './health/health.module';
     host: config.get<string>('DATABASE_HOST') || 'localhost',
     port: parseInt(config.get<string>('DATABASE_PORT') || '5432', 10),
     username: config.get<string>('DATABASE_USERNAME') || 'postgres',
-    password: config.get<string>('DATABASE_PASSWORD') || 'postgres',
+    password: config.get<string>('DATABASE_PASSWORD') || 'booking_pass',
     database: config.get<string>('DATABASE_NAME') || 'booking_e2e',
 
     autoLoadEntities: true,

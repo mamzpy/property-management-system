@@ -1,82 +1,47 @@
-import { Injectable, OnModuleInit, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Property } from '../entities/property.entity';
-import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
+
 
 @Injectable()
-export class PropertyService implements OnModuleInit {
-  private readonly logger = new Logger(PropertyService.name);
-
+export class PropertyService {
   constructor(
     @InjectRepository(Property)
     private readonly propertyRepository: Repository<Property>,
-    private readonly rabbitMQService: RabbitMQService,
   ) {}
-
-  async onModuleInit() {
-    await this.rabbitMQService.subscribe(
-      'booking',
-      'booking.approved',
-      'property-service.booking-approved',
-      async (payload) => {
-        const { bookingId, propertyId, correlationId } = payload;
-
-        this.logger.log(
-          `[CID=${correlationId}] Received booking.approved | bookingId=${bookingId}`,
-        );
-
-        const property = await this.propertyRepository.findOne({
-          where: { id: propertyId },
-        });
-
-        if (!property) {
-          this.logger.warn(
-            `[CID=${correlationId}] Property ${propertyId} not found`,
-          );
-          return;
-        }
-
-        if (property.status === 'UNAVAILABLE') {
-          this.logger.warn(
-            `[CID=${correlationId}] Property ${propertyId} already UNAVAILABLE`,
-          );
-          return;
-        }
-
-        property.status = 'UNAVAILABLE';
-        await this.propertyRepository.save(property);
-
-        this.logger.log(
-          `[CID=${correlationId}] Property ${propertyId} marked UNAVAILABLE due to booking ${bookingId}`,
-        );
-      },
-    );
-  }
 
   async findAll(): Promise<Property[]> {
     return this.propertyRepository.find();
   }
 
- async findOne(id: number): Promise<Property> {
-  const property = await this.propertyRepository.findOneBy({ id });
+  async findOne(id: number): Promise<Property> {
+    const entity = await this.propertyRepository.findOneBy({ id });
 
-  if (!property) {
+    if (!entity) {
+      throw new NotFoundException(`Property with ID ${id} not found`);
+    }
+
+    return entity;
+  }
+
+  async create(data: Partial<Property>): Promise<Property> {
+    const entity = this.propertyRepository.create(data);
+    return this.propertyRepository.save(entity);
+  }
+
+async update(id: number, dto: Partial<Property>) {
+  const entity = await this.propertyRepository.preload({ id, ...dto });
+  if (!entity) {
     throw new NotFoundException(`Property with ID ${id} not found`);
   }
-
-  return property;
+  return this.propertyRepository.save(entity);
 }
- async create(data: Partial<Property>, correlationId = 'property-create-no-cid') {
-    const entity = this.propertyRepository.create(data);
-    const saved = await this.propertyRepository.save(entity);
 
-    await this.rabbitMQService.publish('property', 'property.created', {
-      propertyId: saved.id,
-      correlationId,
-      occurredAt: new Date().toISOString(),
-    });
-
-    return saved;
+async remove(id: number): Promise<void> {
+  const res = await this.propertyRepository.delete(id);
+  if (!res.affected) {
+    throw new NotFoundException(`Property with ID ${id} not found`);
   }
+}
 }

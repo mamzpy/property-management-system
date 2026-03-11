@@ -1,10 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@shared/*": ["../../shared/*"]
-    }
-  },
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }
