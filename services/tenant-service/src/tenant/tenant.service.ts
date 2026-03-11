@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable , Logger, NotFoundException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { OnModuleInit } from '@nestjs/common';
+
 import { Tenant } from 'src/entities/tenant.entity';
 import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
 

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -10,17 +10,23 @@ import { HealthModule } from './health/health.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-TypeOrmModule.forRoot({
-  type: 'postgres',
-  host: process.env.DATABASE_HOST || 'localhost',
-  port: parseInt(process.env.DATABASE_PORT || '5432'),
-  username: process.env.DATABASE_USERNAME || 'postgres',
-  password: process.env.DATABASE_PASSWORD || 'devpassword',
-  database: process.env.DATABASE_NAME || 'property_management',
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: process.env.NODE_ENV !== 'production',
-  logging: process.env.NODE_ENV === 'development',
-}),
+
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DATABASE_HOST'),
+        port: parseInt(config.get<string>('DATABASE_PORT') || '5432'),
+        username: config.get<string>('DATABASE_USERNAME'),
+        password: config.get<string>('DATABASE_PASSWORD'),
+        database: config.get<string>('DATABASE_NAME'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: config.get<string>('NODE_ENV') !== 'production',
+        logging: config.get<string>('NODE_ENV') === 'development',
+      }),
+    }),
+
     AuthModule,
     UsersModule,
     HealthModule,
