@@ -13,7 +13,7 @@ Architecture Diagram
         |            |               |                |                |              |
 +---------------+ +---------------+ +---------------+ +---------------+ +---------------+
 |     Auth      | |   Property    | |    Tenant     | |  Maintenance  | |    Booking    |
-|     :3004     | |     :3001     | |     :3002     | |     :3003     | |     :3005     |
+|     :3001     | |     :3002     | |     :3004     | |     :3003     | |     :3005     |
 +---------------+ +---------------+ +---------------+ +---------------+ +---------------+
 
                        Shared PostgreSQL Database (:5432)
@@ -210,6 +210,12 @@ http://18.201.231.15:3000/health
 - RabbitMQ (event messaging)
 - Redis (caching)
 - PostgreSQL (service databases)
+
+This deployment runs the full PMS stack on AWS EC2 with Docker Compose, including API Gateway, microservices, PostgreSQL, Redis, and RabbitMQ.
+### Example Endpoints
+- API Gateway Health: http://18.201.231.15:3000/health
+- Property Service Health: http://18.201.231.15:3002/properties/health
+- Booking Service Health: http://18.201.231.15:3005/bookings/health
 
 
 ## Database Schema Overview
