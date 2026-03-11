@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OutboxEvent } from './outbox-event.entity';
-import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@pms/shared/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class OutboxPublisher implements OnModuleInit, OnModuleDestroy {

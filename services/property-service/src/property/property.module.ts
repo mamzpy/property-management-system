@@ -6,7 +6,7 @@ import { Property } from '../entities/property.entity';
 import { PropertyService } from './property.service';
 import { PropertyController } from './property.controller';
 
-import { RabbitMQModule } from '@shared/rabbitmq/rabbitmq.module';
+import { RabbitMQModule } from '@pms/shared/rabbitmq/rabbitmq.module';
 import { BookingReservationSaga } from './booking-reservation.saga';
 
 @Module({

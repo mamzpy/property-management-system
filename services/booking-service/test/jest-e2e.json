@@ -8,6 +8,6 @@
   },
   "setupFiles": ["<rootDir>/test/jest.setup.ts"],
   "moduleNameMapper": {
-    "^@shared/(.*)$": "<rootDir>/../../shared/$1"
+    "^@pms/shared/(.*)$": "<rootDir>/../../shared/$1"
   }
 }

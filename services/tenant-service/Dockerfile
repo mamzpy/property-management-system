@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# 2) Shared lib (@shared/*)
+# 2) Shared lib (@pms/shared/*)
 COPY shared ./shared
 
 # 3) Tenant-service deps

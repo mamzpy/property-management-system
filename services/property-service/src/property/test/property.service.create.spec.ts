@@ -3,7 +3,7 @@ import { PropertyService } from '../property.service';
 import { Property } from '../../entities/property.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@pms/shared/rabbitmq/rabbitmq.service';
 
 describe('PropertyService - create()', () => {
   let propertyService: PropertyService;

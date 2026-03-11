@@ -12,7 +12,7 @@
 
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../../shared/*"]
+      "@pms/shared/*": ["../../shared/*"]
     },
 
     "incremental": true,

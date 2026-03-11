@@ -4,6 +4,10 @@
   "description": "",
   "author": "",
   "private": true,
+  "workspaces": [
+   "services/*",
+   "shared"
+],
  
   "license": "UNLICENSED",
   "scripts": {

@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { OnModuleInit } from '@nestjs/common';
 
 import { Tenant } from 'src/entities/tenant.entity';
-import { RabbitMQService } from '@shared/rabbitmq/rabbitmq.service';
+import { RabbitMQService } from '@pms/shared/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class TenantService implements OnModuleInit {

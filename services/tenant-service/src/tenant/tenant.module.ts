@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TenantController } from './tenant.controller';
 import { TenantService } from './tenant.service';
 import { Tenant } from 'src/entities/tenant.entity';
-import { RabbitMQModule } from '@shared/rabbitmq/rabbitmq.module';
+import { RabbitMQModule } from '@pms/shared/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
