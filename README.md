@@ -216,6 +216,12 @@ This deployment runs the full PMS stack on AWS EC2 with Docker Compose, includin
 - API Gateway Health: http://18.201.231.15:3000/health
 - Property Service Health: http://18.201.231.15:3002/properties/health
 - Booking Service Health: http://18.201.231.15:3005/bookings/health
+Live API:
+http://18.201.231.15:3000/health
+
+Example services:
+http://18.201.231.15:3002/properties/health
+http://18.201.231.15:3005/bookings/health
 
 
 ## Database Schema Overview
