@@ -1,42 +1,43 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { PropertyService } from './property.service';
 import { Property } from '../entities/property.entity';
+import { CreatePropertyDto } from './dto/create-property.dto';
+import { UpdatePropertyDto } from './dto/update-property.dto';
 
 @Controller('properties')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
 
-    @Get('health') // This will be accessible at /maintenance/health
+  @Get('health')
   getHealth() {
     return { status: 'ok', service: 'property-service' };
   }
 
-
   @Get()
-  async findAll(): Promise<Property[]> {
+  findAll(): Promise<Property[]> {
     return this.propertyService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Property> {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<Property> {
     return this.propertyService.findOne(id);
   }
 
   @Post()
-  async create(@Body() propertyData: Partial<Property>): Promise<Property> {
-    return this.propertyService.create(propertyData);
+  create(@Body() dto: CreatePropertyDto): Promise<Property> {
+    return this.propertyService.create(dto);
   }
 
   @Put(':id')
-  async update(
-    @Param('id') id: number,
-    @Body() propertyData: Partial<Property>,
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdatePropertyDto,
   ): Promise<Property> {
-    return this.propertyService.update(id, propertyData);
+    return this.propertyService.update(id, dto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
+  remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.propertyService.remove(id);
   }
 }

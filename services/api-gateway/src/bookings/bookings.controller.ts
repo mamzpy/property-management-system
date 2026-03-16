@@ -1,9 +1,9 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Patch, 
-  Body, 
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
   Param,
   UseGuards,
   Request,
@@ -28,7 +28,10 @@ export class BookingsGatewayController {
     const response = await this.httpService.axiosRef.get(
       `${this.bookingServiceUrl}/bookings`,
       {
-        headers: { 'x-user-id': req.user.sub },
+        headers: {
+          'x-user-id': req.user.sub,
+          'x-correlation-id': req.headers['x-correlation-id'],
+        },
       },
     );
     return response.data;
@@ -40,7 +43,10 @@ export class BookingsGatewayController {
     const response = await this.httpService.axiosRef.get(
       `${this.bookingServiceUrl}/bookings/pending`,
       {
-        headers: { 'x-user-id': req.user.sub },
+        headers: {
+          'x-user-id': req.user.sub,
+          'x-correlation-id': req.headers['x-correlation-id'],
+        },
       },
     );
     return response.data;
@@ -51,9 +57,12 @@ export class BookingsGatewayController {
   async create(@Body() body: any, @Request() req) {
     const response = await this.httpService.axiosRef.post(
       `${this.bookingServiceUrl}/bookings`,
-      { ...body },
+      body,
       {
-        headers: { 'x-user-id': req.user.sub },
+        headers: {
+          'x-user-id': req.user.sub,
+          'x-correlation-id': req.headers['x-correlation-id'],
+        },
       },
     );
     return response.data;
@@ -66,7 +75,10 @@ export class BookingsGatewayController {
       `${this.bookingServiceUrl}/bookings/${id}/approve`,
       {},
       {
-        headers: { 'x-user-id': req.user.sub },
+        headers: {
+          'x-user-id': req.user.sub,
+          'x-correlation-id': req.headers['x-correlation-id'],
+        },
       },
     );
     return response.data;
@@ -74,12 +86,19 @@ export class BookingsGatewayController {
 
   @Patch(':id/reject')
   @Roles(UserRole.ADMIN)
-  async reject(@Param('id') id: string, @Body('reason') reason: string, @Request() req) {
+  async reject(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @Request() req,
+  ) {
     const response = await this.httpService.axiosRef.patch(
       `${this.bookingServiceUrl}/bookings/${id}/reject`,
       { reason },
       {
-        headers: { 'x-user-id': req.user.sub },
+        headers: {
+          'x-user-id': req.user.sub,
+          'x-correlation-id': req.headers['x-correlation-id'],
+        },
       },
     );
     return response.data;

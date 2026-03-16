@@ -3,7 +3,46 @@
 A production-grade microservices backend platform for managing rental properties, tenants, bookings, and maintenance operations.  
 Built using **NestJS**, **TypeScript**, **PostgreSQL**, and **Docker**, following modern distributed system architecture principles.
 
----
+## Overview
+Architecture Diagram
+                         +------------------------+
+                         |      API Gateway       |
+                         |         :3000          |
+                         +-----------+------------+
+                                     |
+        +------------+---------------+----------------+----------------+--------------+
+        |            |               |                |                |              |
++---------------+ +---------------+ +---------------+ +---------------+ +---------------+
+|     Auth      | |   Property    | |    Tenant     | |  Maintenance  | |    Booking    |
+|     :3001     | |     :3002     | |     :3004     | |     :3003     | |     :3005     |
++---------------+ +---------------+ +---------------+ +---------------+ +---------------+
+
+                       Shared PostgreSQL Database (:5432)
+
+
+This system provides a scalable backend solution capable of handling:
+
+- User registration, authentication, and authorization
+- Property listing and management
+- Tenant records and lifecycle
+- Booking workflows with administrative approval
+- Maintenance request management
+
+The platform is organized into multiple autonomous services connected through an API Gateway.
+
+## System Architecture
+
+The system consists of six independent microservices:
+
+| Service | Description | Port |
+|---------|-------------|------|
+| API Gateway | Central entry point, authentication, routing | 3000 |
+| Auth Service | User accounts, JWT, roles | 3004 |
+| Property Service | Property CRUD operations | 3001 |
+| Tenant Service | Tenant record management | 3002 |
+| Maintenance Service | Maintenance requests | 3003 |
+| Booking Service | Booking workflow (request, approval, rejection) | 3005 |
+| PostgreSQL | Shared database | 5432 |
 
 ## Overview
 
@@ -244,13 +283,39 @@ npm run test:cov
 npm run test:watch
 ```
 
-### Continuous Integration
+## Deployment
 
-The project uses **GitHub Actions** for automated testing:
+The Property Management System is deployed on AWS EC2 using Docker Compose.
 
-- Tests run automatically on every `push` and `pull request`
-- All test suites must pass before merging
-- View test results in the GitHub Actions tab
+### Live Health Endpoint
+API Gateway:
+http://18.201.231.15:3000/health
+
+### Running Services
+- API Gateway
+- Auth Service
+- Property Service
+- Tenant Service
+- Maintenance Service
+- Booking Service
+- RabbitMQ (event messaging)
+- Redis (caching)
+- PostgreSQL (service databases)
+
+This deployment runs the full PMS stack on AWS EC2 with Docker Compose, including API Gateway, microservices, PostgreSQL, Redis, and RabbitMQ.
+### Example Endpoints
+- API Gateway Health: http://18.201.231.15:3000/health
+- Property Service Health: http://18.201.231.15:3002/properties/health
+- Booking Service Health: http://18.201.231.15:3005/bookings/health
+Live API:
+http://18.201.231.15:3000/health
+
+Example services:
+http://18.201.231.15:3002/properties/health
+http://18.201.231.15:3005/bookings/health
+
+
+## Database Schema Overview
 
 **CI Workflow includes:**
 - Install dependencies

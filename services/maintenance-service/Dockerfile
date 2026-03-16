@@ -1,42 +1,32 @@
-# Build stage
-FROM node:20-alpine AS builder
+# ---------- BUILDER STAGE ----------
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# 1) Maintenance-service deps
+COPY services/maintenance-service/package*.json ./services/maintenance-service/
+RUN cd services/maintenance-service && npm install
 
-# Install all dependencies
-RUN npm ci
+# 2) Maintenance-service source
+COPY services/maintenance-service ./services/maintenance-service
 
-# Copy source code
-COPY . .
-
-# Build the application
+# 3) Build
+WORKDIR /app/services/maintenance-service
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
+# ---------- RUNTIME STAGE ----------
+FROM node:22-alpine
 
 RUN apk add --no-cache curl
 
-WORKDIR /app
+WORKDIR /app/services/maintenance-service
 
-# Copy package files
-COPY package*.json ./
+COPY --from=builder /app/services/maintenance-service/dist ./dist
+COPY --from=builder /app/services/maintenance-service/package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+ENV NODE_ENV=production
 
-# Expose port
-EXPOSE 3003
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:3003/maintenance/health || exit 1
-
-# Start the application
-CMD ["node", "dist/main"]
+WORKDIR /app/services/maintenance-service/dist
+CMD ["node", "main.js"]

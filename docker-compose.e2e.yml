@@ -1,0 +1,48 @@
+services:
+  booking-postgres-e2e:
+    image: postgres:15-alpine
+    container_name: booking_postgres_e2e
+    environment:
+      POSTGRES_DB: booking_e2e
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "55432:5432"
+    networks:
+      - e2e_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d booking_e2e"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq-e2e:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_e2e
+    ports:
+      - "55672:5672"
+      - "55673:15672"
+    networks:
+      - e2e_network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis-e2e:
+    image: redis:7-alpine
+    container_name: redis_e2e
+    ports:
+      - "56379:6379"
+    networks:
+      - e2e_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+networks:
+  e2e_network:
+    driver: bridge

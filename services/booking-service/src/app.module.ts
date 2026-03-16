@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Booking } from './entities/booking.entity';
 import { BookingModule } from './bookings/bookings.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -10,22 +10,27 @@ import { BookingModule } from './bookings/bookings.module';
       isGlobal: true,
     }),
 
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DATABASE_HOST'),
-        port: config.get<number>('DATABASE_PORT'),
-        username: config.get<string>('DATABASE_USERNAME'),
-        password: config.get<string>('DATABASE_PASSWORD'),
-        database: config.get<string>('DATABASE_NAME'),
-        autoLoadEntities: true,
-        synchronize: true, // ok for dev
-      }),
-    }),
+   TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => ({
+    type: 'postgres',
+    host: config.get<string>('DATABASE_HOST') || 'localhost',
+    port: parseInt(config.get<string>('DATABASE_PORT') || '5432', 10),
+    username: config.get<string>('DATABASE_USERNAME') || 'postgres',
+    password: config.get<string>('DATABASE_PASSWORD') || 'booking_pass',
+    database: config.get<string>('DATABASE_NAME') || 'booking_e2e',
+
+    autoLoadEntities: true,
+    synchronize: true,
+
+    retryAttempts: 0,
+    retryDelay: 0,
+  }),
+}),
 
     BookingModule,
+    HealthModule, 
   ],
 })
 export class AppModule {}

@@ -1,8 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -12,119 +20,204 @@ export class AuthController {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.authServiceUrl = this.configService.get<string>('AUTH_SERVICE_URL') || 'http://localhost:3004';
+    this.authServiceUrl =
+      this.configService.get<string>('AUTH_SERVICE_URL') ||
+      'http://localhost:3004';
   }
 
+  // 🔐 LOGIN
   @Post('login')
-  async login(@Body() loginDto: any): Promise<any> {
+  async login(@Body() loginDto: any, @Req() req: Request): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.post(`${this.authServiceUrl}/auth/login`, loginDto)
+      this.httpService.post(
+        `${this.authServiceUrl}/auth/login`,
+        loginDto,
+        {
+          headers: {
+            'x-correlation-id': req.headers['x-correlation-id'],
+          },
+        },
+      ),
     );
     return response.data;
   }
 
   @Post('register')
-  async register(@Body() registerDto: any): Promise<any> {
+  async register(
+    @Body() registerDto: any,
+    @Req() req: Request,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.post(`${this.authServiceUrl}/auth/register`, registerDto)
+      this.httpService.post(
+        `${this.authServiceUrl}/auth/register`,
+        registerDto,
+        {
+          headers: {
+            'x-correlation-id': req.headers['x-correlation-id'],
+          },
+        },
+      ),
     );
     return response.data;
   }
 
   @Post('refresh')
-  async refresh(@Body() refreshDto: any): Promise<any> {
+  async refresh(
+    @Body() refreshDto: any,
+    @Req() req: Request,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.post(`${this.authServiceUrl}/auth/refresh`, refreshDto)
+      this.httpService.post(
+        `${this.authServiceUrl}/auth/refresh`,
+        refreshDto,
+        {
+          headers: {
+            'x-correlation-id': req.headers['x-correlation-id'],
+          },
+        },
+      ),
     );
     return response.data;
   }
 
   @Get('verify')
   async verify(@Req() req: Request): Promise<any> {
-    // Only include Authorization header if it exists and is not undefined or 'Bearer undefined'
-    const headers: any = {};
-    if (req.headers.authorization && 
-        req.headers.authorization !== 'undefined' && 
-        req.headers.authorization !== 'Bearer undefined') {
+    const headers: any = {
+      'x-correlation-id': req.headers['x-correlation-id'],
+    };
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization !== 'undefined' &&
+      req.headers.authorization !== 'Bearer undefined'
+    ) {
       headers.Authorization = req.headers.authorization;
     }
 
     const response = await firstValueFrom(
       this.httpService.get(`${this.authServiceUrl}/auth/verify`, {
-        headers
-      })
+        headers,
+      }),
     );
     return response.data;
   }
 
   @Get('profile')
   async getProfile(@Req() req: Request): Promise<any> {
-    // Only include Authorization header if it exists and is not undefined
-    const headers: any = {};
-    if (req.headers.authorization && req.headers.authorization !== 'undefined') {
+    const headers: any = {
+      'x-correlation-id': req.headers['x-correlation-id'],
+    };
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization !== 'undefined'
+    ) {
       headers.Authorization = req.headers.authorization;
     }
 
     const response = await firstValueFrom(
       this.httpService.get(`${this.authServiceUrl}/auth/profile`, {
-        headers
-      })
+        headers,
+      }),
     );
     return response.data;
   }
 
   @Post('logout')
   async logout(@Req() req: Request): Promise<any> {
-    // Only include Authorization header if it exists and is not undefined
-    const headers: any = {};
-    if (req.headers.authorization && req.headers.authorization !== 'undefined') {
+    const headers: any = {
+      'x-correlation-id': req.headers['x-correlation-id'],
+    };
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization !== 'undefined'
+    ) {
       headers.Authorization = req.headers.authorization;
     }
 
     const response = await firstValueFrom(
-      this.httpService.post(`${this.authServiceUrl}/auth/logout`, {}, {
-        headers
-      })
+      this.httpService.post(
+        `${this.authServiceUrl}/auth/logout`,
+        {},
+        { headers },
+      ),
     );
     return response.data;
   }
 
   @Put('change-password')
-  async changePassword(@Body() changePasswordDto: any, @Req() req: Request): Promise<any> {
-    // Only include Authorization header if it exists and is not undefined
-    const headers: any = {};
-    if (req.headers.authorization && req.headers.authorization !== 'undefined') {
+  async changePassword(
+    @Body() changePasswordDto: any,
+    @Req() req: Request,
+  ): Promise<any> {
+    const headers: any = {
+      'x-correlation-id': req.headers['x-correlation-id'],
+    };
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization !== 'undefined'
+    ) {
       headers.Authorization = req.headers.authorization;
     }
 
     const response = await firstValueFrom(
-      this.httpService.put(`${this.authServiceUrl}/auth/change-password`, changePasswordDto, {
-        headers
-      })
+      this.httpService.put(
+        `${this.authServiceUrl}/auth/change-password`,
+        changePasswordDto,
+        { headers },
+      ),
     );
     return response.data;
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() forgotPasswordDto: any): Promise<any> {
+  async forgotPassword(
+    @Body() forgotPasswordDto: any,
+    @Req() req: Request,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.post(`${this.authServiceUrl}/auth/forgot-password`, forgotPasswordDto)
+      this.httpService.post(
+        `${this.authServiceUrl}/auth/forgot-password`,
+        forgotPasswordDto,
+        {
+          headers: {
+            'x-correlation-id': req.headers['x-correlation-id'],
+          },
+        },
+      ),
     );
     return response.data;
   }
 
   @Post('reset-password')
-  async resetPassword(@Body() resetPasswordDto: any): Promise<any> {
+  async resetPassword(
+    @Body() resetPasswordDto: any,
+    @Req() req: Request,
+  ): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.post(`${this.authServiceUrl}/auth/reset-password`, resetPasswordDto)
+      this.httpService.post(
+        `${this.authServiceUrl}/auth/reset-password`,
+        resetPasswordDto,
+        {
+          headers: {
+            'x-correlation-id': req.headers['x-correlation-id'],
+          },
+        },
+      ),
     );
     return response.data;
   }
 
   @Get('health')
-  async healthCheck(): Promise<any> {
+  async healthCheck(@Req() req: Request): Promise<any> {
     const response = await firstValueFrom(
-      this.httpService.get(`${this.authServiceUrl}/auth/health`)
+      this.httpService.get(`${this.authServiceUrl}/auth/health`, {
+        headers: {
+          'x-correlation-id': req.headers['x-correlation-id'],
+        },
+      }),
     );
     return response.data;
   }

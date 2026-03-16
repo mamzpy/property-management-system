@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { HttpModule } from '@nestjs/axios';
+
 import { Booking } from '../entities/booking.entity';
 import { BookingService } from './bookings.service';
 import { BookingController } from './bookings.controller';
 
+import { RabbitMQModule } from '@pms/shared/rabbitmq/rabbitmq.module';
+import { RedisModule } from '../redis/redis.module';
+import { OutboxModule } from '../outbox/outbox.module';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booking]),
-    HttpModule, 
+    RabbitMQModule,
+    RedisModule,
+    OutboxModule,
   ],
   controllers: [BookingController],
   providers: [BookingService],

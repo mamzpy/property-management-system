@@ -1,42 +1,42 @@
-# Build stage
-FROM node:20-alpine AS builder
+# ---------- BUILDER STAGE ----------
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# 1) Root deps (for shared RabbitMQ module)
 COPY package*.json ./
+RUN npm install
 
-# Install all dependencies
-RUN npm ci
+# 2) Shared lib (@pms/shared/*)
+COPY shared ./shared
 
-# Copy source code
-COPY . .
+# 3) Tenant-service deps
+COPY services/tenant-service/package*.json ./services/tenant-service/
+RUN cd services/tenant-service && npm install
 
-# Build the application
+# 4) Tenant-service source
+COPY services/tenant-service ./services/tenant-service
+
+# 5) Build tenant-service
+WORKDIR /app/services/tenant-service
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
+# ---------- RUNTIME STAGE ----------
+FROM node:22-alpine
 
 RUN apk add --no-cache curl
 
-WORKDIR /app
+# We run the app FROM the service folder
+WORKDIR /app/services/tenant-service
 
-# Copy package files
-COPY package*.json ./
+# Copy compiled code + package.json for this service
+COPY --from=builder /app/services/tenant-service/dist ./dist
+COPY --from=builder /app/services/tenant-service/package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install only production deps
+RUN npm install --omit=dev
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+ENV NODE_ENV=production
 
-# Expose port
-EXPOSE 3002
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:3002/tenants/health || exit 1
-
-# Start the application
-CMD ["node", "dist/main.js"]
+WORKDIR /app/services/tenant-service/dist
+CMD ["node", "services/tenant-service/src/main.js"]
