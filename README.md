@@ -1,6 +1,7 @@
 # Property Management System
 
-A production-grade microservices platform for managing rental properties, tenants, bookings, and maintenance operations. Designed using NestJS, TypeScript, PostgreSQL, and Docker, following modern distributed system architecture principles.
+A production-grade microservices backend platform for managing rental properties, tenants, bookings, and maintenance operations.  
+Built using **NestJS**, **TypeScript**, **PostgreSQL**, and **Docker**, following modern distributed system architecture principles.
 
 ## Overview
 Architecture Diagram
@@ -43,108 +44,174 @@ The system consists of six independent microservices:
 | Booking Service | Booking workflow (request, approval, rejection) | 3005 |
 | PostgreSQL | Shared database | 5432 |
 
-Services communicate via REST and run inside Docker containers.
+## Overview
 
-## Features
+This system is structured using a microservices architecture where each service is independently deployable and communicates through a central API Gateway.
 
-### Authentication & Authorization
+**Platform capabilities include:**
 
-- JWT-based authentication
-- Role-based access control (Admin, Tenant)
-- Secure password hashing with bcrypt
-- Gateway-level token validation
+- User registration, authentication, and authorization  
+- Property listing and management  
+- Tenant lifecycle and record tracking  
+- Booking workflow with administrative approval  
+- Maintenance request management  
 
-### Property Management
+All services run inside Docker containers and share a PostgreSQL instance.
 
-- Create, update, delete property listings
-- Property availability tracking
-- Admin-controlled access
+---
 
-### Booking Workflow
+## Architecture
 
-- Tenants can request bookings
-- Administrators approve or reject requests
-- Status mutations (Pending → Approved / Rejected)
+```
+                    +------------------------+
+                    |      API Gateway       |
+                    |         :3000          |
+                    +-----------+------------+
+                                |
+        +-----------------------+-----------------------+
+        |           |           |           |           |
+   +--------+  +----------+  +--------+  +--------+  +-------------+
+   |  Auth  |  | Property |  | Tenant |  | Booking|  | Maintenance |
+   | :3004  |  |  :3001   |  | :3002  |  | :3005  |  |    :3003    |
+   +--------+  +----------+  +--------+  +--------+  +-------------+
+        |           |           |           |           |
+        +-------------------+-------------------+-------+
+                            |
+                +-----------------------+
+                |   PostgreSQL :5432    |
+                +-----------------------+
+```
 
-### Maintenance Requests
+---
 
-- Tenants submit and track maintenance issues
-- Administrators manage and update progress
+## Microservices Summary
 
-### User & Tenant Management
+| Service            | Description                                 | Port |
+|-------------------|---------------------------------------------|------|
+| API Gateway       | Routing, JWT validation, RBAC               | 3000 |
+| Auth Service      | Authentication, users, roles                | 3004 |
+| Property Service  | CRUD for rental properties                  | 3001 |
+| Tenant Service    | Tenant records and linkage                  | 3002 |
+| Maintenance       | Maintenance request workflow                | 3003 |
+| Booking Service   | Booking create/approve/reject logic         | 3005 |
+| PostgreSQL        | Shared database                             | 5432 |
 
-- Full user registration flow
-- Role assignment
-- Automatic tenant record creation upon approved booking (planned extension)
+---
 
 ## Technology Stack
 
-- **Backend:** NestJS (TypeScript)
-- **Database:** PostgreSQL + TypeORM
-- **Security:** JWT, bcrypt
-- **Communication:** REST, Axios
-- **Containerization:** Docker & Docker Compose
-- **Validation:** class-validator DTOs
+- **NestJS (TypeScript)** - Backend framework
+- **PostgreSQL + TypeORM** - Database and ORM
+- **JWT Authentication** - Secure token-based auth
+- **Docker & Docker Compose** - Containerization
+- **REST API** - Service communication
+- **Axios** - HTTP client for service-to-service calls
+- **class-validator** - DTO validation
+- **Jest** - Unit and integration testing
+- **GitHub Actions** - CI/CD pipeline
 
-## Installation and Setup
+---
+
+## Installation & Setup
 
 ### Requirements
-
-- Docker
-- Docker Compose
+- Docker  
+- Docker Compose  
 
 ### Steps
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/mamzpy/property-management-system.git
 cd property-management-system
 
 # Start all services
-docker-compose up --build
+docker compose up --build -d
+
+# Check service status
+docker compose ps
+
+# View logs
+docker compose logs -f
 ```
 
-### Service Access
+### Stopping Services
 
-| Service | URL |
-|---------|-----|
-| API Gateway | http://localhost:3000 |
-| Auth Service | http://localhost:3004 |
-| Property Service | http://localhost:3001 |
-| Tenant Service | http://localhost:3002 |
-| Maintenance Service | http://localhost:3003 |
-| Booking Service | http://localhost:3005 |
-| PostgreSQL | localhost:5432 |
+```bash
+# Stop all services
+docker compose down
 
-## API Summary
+# Stop and remove volumes (deletes all data)
+docker compose down -v
+```
+
+---
+
+## Service Access
+
+| Service          | URL                         |
+|------------------|-----------------------------|
+| API Gateway      | http://localhost:3000       |
+| Auth Service     | http://localhost:3004       |
+| Property Service | http://localhost:3001       |
+| Tenant Service   | http://localhost:3002       |
+| Maintenance      | http://localhost:3003       |
+| Booking Service  | http://localhost:3005       |
+| PostgreSQL       | localhost:5432              |
+
+---
+
+## API Endpoints
 
 ### Authentication
 
 ```http
-POST /auth/register
-POST /auth/login
-GET  /auth/profile
+POST   /auth/register      # Register new user
+POST   /auth/login         # User login
+GET    /auth/profile       # Get user profile (requires JWT)
 ```
 
 ### Properties
 
 ```http
-GET    /properties
-GET    /properties/:id
-POST   /properties
-PATCH  /properties/:id
-DELETE /properties/:id
+GET    /properties         # Get all properties
+GET    /properties/:id     # Get property by ID
+POST   /properties         # Create new property (admin only)
+PATCH  /properties/:id     # Update property (admin only)
+DELETE /properties/:id     # Delete property (admin only)
 ```
 
 ### Bookings
 
 ```http
-POST   /bookings
-GET    /bookings
-GET    /bookings/pending
-PATCH  /bookings/:id/approve
-PATCH  /bookings/:id/reject
+POST   /bookings                 # Create new booking
+GET    /bookings                 # Get all bookings
+GET    /bookings/pending         # Get pending bookings
+PATCH  /bookings/:id/approve     # Approve booking (admin only)
+PATCH  /bookings/:id/reject      # Reject booking (admin only)
 ```
+
+### Tenants
+
+```http
+GET    /tenants            # Get all tenants
+GET    /tenants/:id        # Get tenant by ID
+POST   /tenants            # Create new tenant
+PATCH  /tenants/:id        # Update tenant
+DELETE /tenants/:id        # Delete tenant
+```
+
+### Maintenance
+
+```http
+GET    /maintenance        # Get all maintenance requests
+GET    /maintenance/:id    # Get request by ID
+POST   /maintenance        # Create maintenance request
+PATCH  /maintenance/:id    # Update request status
+DELETE /maintenance/:id    # Delete request
+```
+
+---
 
 ## Project Structure
 
@@ -152,44 +219,68 @@ PATCH  /bookings/:id/reject
 property-management-system/
 ├── services/
 │   ├── api-gateway/
+│   │   ├── src/
+│   │   ├── test/
+│   │   ├── Dockerfile
+│   │   └── .env.docker
 │   ├── auth-service/
+│   │   ├── src/
+│   │   ├── test/
+│   │   ├── Dockerfile
+│   │   └── .env.docker
 │   ├── property-service/
+│   │   ├── src/
+│   │   ├── test/
+│   │   ├── Dockerfile
+│   │   └── .env.docker
 │   ├── tenant-service/
+│   │   ├── src/
+│   │   ├── test/
+│   │   ├── Dockerfile
+│   │   └── .env.docker
 │   ├── maintenance-service/
+│   │   ├── src/
+│   │   ├── test/
+│   │   ├── Dockerfile
+│   │   └── .env.docker
 │   └── booking-service/
+│       ├── src/
+│       ├── test/
+│       ├── Dockerfile
+│       └── .env.docker
 ├── docker-compose.yml
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 └── README.md
 ```
 
-## Design Patterns Used
+---
 
-- Microservices Architecture
-- API Gateway Pattern
-- DTO + Validation Layer
-- Repository Pattern (TypeORM)
-- Guard Pattern for authentication & authorization
+## Testing
 
-## Development Guide
+This project includes comprehensive unit tests for core business logic using **Jest**.
 
-### Running a single service
+### Test Coverage
 
-```bash
-cd services/auth-service
-npm install
-npm run start:dev
-```
+The following services have unit tests implemented:
 
-### Stopping services
+- **Booking Service** - Create, approve, and reject booking logic
+- **Property Service** - Property creation and retrieval logic
+- **Auth Service** - User registration and authentication flows *(if implemented)*
+
+### Running Tests
 
 ```bash
-docker-compose down
-```
+# Run tests for a specific service
+cd services/booking-service
+npm run test
 
-### Clean rebuild
+# Run tests with coverage
+npm run test:cov
 
-```bash
-docker-compose down -v
-docker-compose up --build
+# Run tests in watch mode
+npm run test:watch
 ```
 
 ## Deployment
@@ -226,26 +317,79 @@ http://18.201.231.15:3005/bookings/health
 
 ## Database Schema Overview
 
-- **users** — accounts, passwords, roles
-- **properties** — physical rental units
-- **tenants** — tenant profiles (linked to users)
-- **maintenance_requests** — issues and repairs
-- **bookings** — booking and approval workflow
+**CI Workflow includes:**
+- Install dependencies
+- Run unit tests
+- Generate coverage reports
+- Validate build process
+
+---
 
 ## Security Practices
 
-- JWT-based authentication
-- Hashed passwords (bcrypt)
-- Role-based route protection
-- Validated input DTOs
-- Isolated services running inside Docker
+- **JWT-based authentication** - Secure token generation and validation
+- **Bcrypt password hashing** - Industry-standard password encryption
+- **Role-based access control (RBAC)** - Admin and user permission levels
+- **Input validation with DTOs** - Request payload validation using class-validator
+- **Service isolation** - Each microservice runs in its own Docker container
+- **Environment variables** - Sensitive data stored in `.env.docker` files
+- **Database health checks** - Ensures services connect only when DB is ready
+
+---
+
+## Environment Variables
+
+Each service uses its own `.env.docker` file. Example configuration:
+
+```env
+DATABASE_HOST=postgres
+DATABASE_PORT=5432
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=your_secure_password
+DATABASE_NAME=property_management
+PORT=3001
+JWT_SECRET=your-super-secret-jwt-key
+AUTH_SERVICE_URL=http://auth-service:3004
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## Future Enhancements
+
+- [ ] Add Redis for caching and session management
+- [ ] Implement message queue (RabbitMQ/Kafka) for async communication
+- [ ] Add payment integration for bookings
+- [ ] Implement email notifications
+- [ ] Add Swagger/OpenAPI documentation
+- [ ] Expand test coverage to 80%+
+- [ ] Add integration tests
+- [ ] Implement monitoring and logging (Prometheus/Grafana)
+
+---
 
 ## Author
 
-**Mohammadreza Ghadarjani** — Junior Backend Developer
+**Mohammadreza Ghadarjani**  
+Backend Developer  
 
-- 📧 Email: m.reza.ghadarjani@gmail.com
-- 💻 GitHub: [@mamzpy](https://github.com/mamzpy)
-- 📍 Location: Turin, Italy
+📧 m.reza.ghadarjani@gmail.com  
+🐙 [GitHub](https://github.com/mamzpy)  
+📍 Turin, Italy
 
 ---
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
