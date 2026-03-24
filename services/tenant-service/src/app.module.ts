@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TenantModule } from './tenant/tenant.module';
+import { InitTenantSchema1774300000000 } from './database/migrations/1774300000000-InitTenantSchema';
 
 @Module({
   imports: [
@@ -18,7 +19,9 @@ import { TenantModule } from './tenant/tenant.module';
       password: process.env.DATABASE_PASSWORD || 'tenant_pass',
       database: process.env.DATABASE_NAME || 'tenant_db',
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: false,
+      migrations: [InitTenantSchema1774300000000], // ✅ direct import, no glob
+      migrationsRun: true,
     }),
     TenantModule,
   ],

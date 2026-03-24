@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { PropertyStatus } from '@pms/shared/contracts/property/property-status.enum';
 
 @Entity('properties')
 export class Property {
@@ -29,8 +30,12 @@ export class Property {
   @Column({ nullable: true })
   description: string;
 
-  @Column({ default: 'available' })
-  status: string; // available, occupied, maintenance
+  @Column({
+    type: 'enum',
+    enum: PropertyStatus,
+    default: PropertyStatus.AVAILABLE,
+  })
+  status: PropertyStatus; // ✅ typed enum instead of string
 
   @CreateDateColumn()
   createdAt: Date;

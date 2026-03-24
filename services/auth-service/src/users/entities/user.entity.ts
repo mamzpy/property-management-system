@@ -1,9 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { UserRole } from '@pms/shared/contracts/common/user-role.enum';
 
-export enum UserRole {
-  ADMIN = 'admin',
-  TENANT = 'tenant',
-}
 
 export enum UserStatus {
   ACTIVE = 'active',

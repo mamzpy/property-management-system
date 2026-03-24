@@ -16,9 +16,7 @@ export class OutboxPublisher implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    // ✅ don’t run background loop in tests (avoids open handles)
     if (process.env.NODE_ENV === 'test') return;
-
     this.timer = setInterval(() => {
       this.publishPending().catch(() => {});
     }, 1500);
@@ -28,62 +26,60 @@ export class OutboxPublisher implements OnModuleInit, OnModuleDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
-private async claimBatch(limit = 10): Promise<OutboxEvent[]> {
-  const rows = await this.outboxRepo.query(
-    `
-    UPDATE outbox_events
-    SET status = 'processing'
-    WHERE id IN (
-      SELECT id
-      FROM outbox_events
-      WHERE status = 'pending'
-      ORDER BY "createdAt" ASC
-      LIMIT $1
-      FOR UPDATE SKIP LOCKED
-    )
-    RETURNING *;
-    `,
-    [limit],
-  );
+  private async claimBatch(limit = 10): Promise<OutboxEvent[]> {
+    return this.outboxRepo.manager.transaction(async (manager) => {
+      const rows = await manager
+        .createQueryBuilder(OutboxEvent, 'evt')
+        .setLock('pessimistic_write_or_fail')
+        .where('evt.status = :status', { status: 'pending' })
+        .orderBy('evt.createdAt', 'ASC')
+        .limit(limit)
+        .getMany();
 
-  return rows as OutboxEvent[];
-}
+      if (rows.length === 0) return [];
 
-private async publishPending() {
-  const batch = await this.claimBatch(10);
+      const ids = rows.map((r) => r.id);
+      await manager
+        .createQueryBuilder()
+        .update(OutboxEvent)
+        .set({ status: 'processing' })
+        .whereInIds(ids)
+        .execute();
 
-  for (const evt of batch) {
-    try {
-      await this.rabbit.publish(
-        evt.aggregateType,
-        evt.eventType,
-        evt.payload,
-      );
+      return rows;
+    });
+  }
 
-      await this.outboxRepo.update(
-        { id: evt.id },
-        {
-          status: 'published',
-          publishedAt: new Date(),
-          lastError: null,
-        },
-      );
-    } catch (err: any) {
-      const message = err?.message ?? String(err);
-
-      await this.outboxRepo.update(
-        { id: evt.id },
-        {
-          status: 'pending',
-          attempts: (evt.attempts ?? 0) + 1,
-          lastError: message,
-        },
-      );
-
-      this.logger.warn(
-        `Outbox publish failed for ${evt.id}: ${message}`,
-      );
+  private async publishPending() {
+    const batch = await this.claimBatch(10);
+    for (const evt of batch) {
+      try {
+        await this.rabbit.publish(
+          evt.aggregateType,
+          evt.eventType,
+          evt.payload,
+        );
+        await this.outboxRepo.update(
+          { id: evt.id },
+          {
+            status: 'published',
+            publishedAt: new Date(),
+            lastError: null,
+          },
+        );
+        this.logger.log(`Published ${evt.eventType} for ${evt.aggregateId}`);
+      } catch (err: any) {
+        const message = err?.message ?? String(err);
+        await this.outboxRepo.update(
+          { id: evt.id },
+          {
+            status: 'pending',
+            attempts: (evt.attempts ?? 0) + 1,
+            lastError: message,
+          },
+        );
+        this.logger.warn(`Outbox publish failed for ${evt.id}: ${message}`);
+      }
     }
   }
-}
 }

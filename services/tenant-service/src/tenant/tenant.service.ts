@@ -1,8 +1,7 @@
-import { Injectable , Logger, NotFoundException} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OnModuleInit } from '@nestjs/common';
-
 import { Tenant } from 'src/entities/tenant.entity';
 import { RabbitMQService } from '@pms/shared/rabbitmq/rabbitmq.service';
 
@@ -16,7 +15,6 @@ export class TenantService implements OnModuleInit {
     private readonly rabbitMQService: RabbitMQService,
   ) {}
 
-  // ✅ Subscribe to booking.created
   async onModuleInit() {
     await this.rabbitMQService.subscribe(
       'booking',
@@ -24,16 +22,14 @@ export class TenantService implements OnModuleInit {
       'tenant-service.booking-created',
       async (payload) => {
         const { bookingId, tenantId, propertyId, correlationId } = payload;
-
         this.logger.log(
-          `[CID=${correlationId}] Received booking.created | bookingId=${bookingId}`,
+          `[CID=${correlationId}] Received booking.created | bookingId=${bookingId} tenantId=${tenantId} propertyId=${propertyId}`,
         );
 
         const existingTenant = await this.tenantRepository.findOne({
-          where: { userId: tenantId, propertyId },
+          where: { userId: tenantId, propertyId: String(propertyId) },
         });
 
-        // ✅ Idempotency
         if (existingTenant) {
           this.logger.warn(
             `[CID=${correlationId}] Duplicate booking.created ignored | bookingId=${bookingId}`,
@@ -43,9 +39,8 @@ export class TenantService implements OnModuleInit {
 
         await this.tenantRepository.save({
           userId: tenantId,
-          propertyId,
+          propertyId: String(propertyId),
           status: 'ACTIVE',
-          bookingId,
         });
 
         this.logger.log(
@@ -59,10 +54,13 @@ export class TenantService implements OnModuleInit {
     return this.tenantRepository.find();
   }
 
-  async findOne(id: number): Promise<Tenant> {
-    const tenant = await this.tenantRepository.findOneBy({ id });
+  // ✅ query by userId (UUID), not DB integer id
+  async findOne(userId: string): Promise<Tenant> {
+    const tenant = await this.tenantRepository.findOne({
+      where: { userId },
+    });
     if (!tenant) {
-      throw new NotFoundException(`Tenant with ID ${id} not found`);
+      throw new NotFoundException(`Tenant with userId ${userId} not found`);
     }
     return tenant;
   }
@@ -72,12 +70,16 @@ export class TenantService implements OnModuleInit {
     return this.tenantRepository.save(tenant);
   }
 
-  async update(id: number, tenantData: Partial<Tenant>): Promise<Tenant> {
-    await this.tenantRepository.update(id, tenantData);
-    return this.findOne(id);
+  async update(userId: string, tenantData: Partial<Tenant>): Promise<Tenant> {
+    await this.tenantRepository.update({ userId }, tenantData);
+    return this.findOne(userId);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.tenantRepository.delete(id);
+  async remove(userId: string): Promise<void> {
+    await this.tenantRepository.delete({ userId });
+  }
+  async resetAll(): Promise<void> {
+    await this.tenantRepository.query(`TRUNCATE TABLE tenants RESTART IDENTITY CASCADE`);
+    this.logger.log("Demo reset — all tenants cleared");
   }
 }

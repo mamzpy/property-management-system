@@ -20,9 +20,9 @@ export class AppController {
   async getSystemHealth() {
     const services: Record<string, string> = {
       apiGateway: 'http://localhost:3000/health',
-      auth: 'http://auth-service:3004/health',
-      property: 'http://property-service:3001/properties/health',
-      tenant: 'http://tenant-service:3002/health',
+      auth: 'http://auth-service:3001/health',
+      property: 'http://property-service:3002/properties/health',
+      tenant: 'http://tenant-service:3004/health',
       maintenance: 'http://maintenance-service:3003/maintenance/health',
       booking: 'http://booking-service:3005/bookings/health',
     };

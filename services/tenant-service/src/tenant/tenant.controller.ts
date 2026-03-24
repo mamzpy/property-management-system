@@ -6,11 +6,10 @@ import { Tenant } from 'src/entities/tenant.entity';
 export class TenantController {
   constructor(private readonly tenantService: TenantService) {}
 
-    @Get('health') // This will be accessible at /maintenance/health
+  @Get('health')
   getHealth() {
     return { status: 'ok', service: 'tenants-service' };
   }
-
 
   @Get()
   async findAll(): Promise<Tenant[]> {
@@ -18,7 +17,7 @@ export class TenantController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Tenant> {
+  async findOne(@Param('id') id: string): Promise<Tenant> {
     return this.tenantService.findOne(id);
   }
 
@@ -29,14 +28,20 @@ export class TenantController {
 
   @Put(':id')
   async update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() tenantData: Partial<Tenant>,
   ): Promise<Tenant> {
     return this.tenantService.update(id, tenantData);
   }
 
+  @Delete('reset/all')
+  async resetAll(): Promise<{ message: string }> {
+    await this.tenantService.resetAll();
+    return { message: 'All tenants cleared' };
+  }
+
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
+  async remove(@Param('id') id: string): Promise<void> {
     return this.tenantService.remove(id);
   }
 }

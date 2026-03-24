@@ -17,20 +17,28 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migration:build": "npm run build",
+    "migration:generate": "npm run build && npx typeorm -d dist/services/property-service/src/database/data-source.js migration:generate src/database/migrations/InitPropertySchema",
+    "migration:create": "npx typeorm migration:create src/database/migrations/ManualMigration",
+    "migration:run": "npx typeorm -d dist/services/property-service/src/database/data-source.js migration:run",
+    "migration:revert": "npx typeorm -d dist/services/property-service/src/database/data-source.js migration:revert"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
+    "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.6",
     "@nestjs/typeorm": "^11.0.0",
     "amqplib": "^0.10.9",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1",
+    "class-validator": "^0.14.1",
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.24"
   },
   "devDependencies": {
