@@ -19,16 +19,19 @@ services:
       - property_network
 
   property-postgres:
-    image: postgres:15-alpine
-    container_name: property_postgres
-    environment:
-      POSTGRES_DB: property_db
-      POSTGRES_USER: property_user
-      POSTGRES_PASSWORD: property_pass
-    ports:
-      - "5434:5432"
-    networks:
-      - property_network
+   image: postgres:15-alpine
+   container_name: property_postgres
+   environment:
+    POSTGRES_DB: property_db
+    POSTGRES_USER: property_user
+    POSTGRES_PASSWORD: property_pass
+   ports:
+    - "5434:5432"
+   volumes:
+    - property_pgdata:/var/lib/postgresql/data
+   networks:
+    - property_network
+
 
   maintenance-postgres:
     image: postgres:15-alpine
@@ -94,19 +97,19 @@ services:
   # =========================
   auth-service:
     build:
-      context: ./services/auth-service
-      dockerfile: Dockerfile
+     context: .
+     dockerfile: ./services/auth-service/Dockerfile
     container_name: auth_service
     restart: unless-stopped
     env_file:
-      - ./services/auth-service/.env.docker
+    - ./services/auth-service/.env.docker
     ports:
-      - "3001:3001"
+    - "3001:3001"
     depends_on:
-      auth-postgres:
-        condition: service_started
+     auth-postgres:
+      condition: service_started
     networks:
-      - property_network
+    - property_network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
       interval: 30s
@@ -212,6 +215,8 @@ services:
         condition: service_started
       auth-service:
         condition: service_healthy
+      property-redis:
+        condition: service_started  
     networks:
       - property_network
     healthcheck:
@@ -226,8 +231,8 @@ services:
   # =========================
   api-gateway:
     build:
-      context: ./services/api-gateway
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/api-gateway/Dockerfile
     container_name: property_api_gateway
     restart: unless-stopped
     ports:
@@ -255,3 +260,4 @@ networks:
 
 volumes:
   postgres_data:
+  property_pgdata:

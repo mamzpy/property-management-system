@@ -2,7 +2,11 @@ import { Controller, Get, Post, Body, Param, Request } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+
+@ApiTags('Maintenance')
+@ApiBearerAuth()
 @Controller('maintenance')
 export class MaintenanceController {
   private readonly maintenanceServiceUrl: string;

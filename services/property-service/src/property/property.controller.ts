@@ -3,7 +3,10 @@ import { PropertyService } from './property.service';
 import { Property } from '../entities/property.entity';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('properties')
+@ApiBearerAuth()
 @Controller('properties')
 export class PropertyController {
   constructor(private readonly propertyService: PropertyService) {}
@@ -26,6 +29,12 @@ export class PropertyController {
   @Post()
   create(@Body() dto: CreatePropertyDto): Promise<Property> {
     return this.propertyService.create(dto);
+  }
+
+  @Post('internal/reset')
+  async resetDemo(): Promise<{ message: string }> {
+    await this.propertyService.resetForDemo();
+    return { message: 'Properties reset to available' };
   }
 
   @Put(':id')

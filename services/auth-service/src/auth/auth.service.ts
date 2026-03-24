@@ -2,8 +2,8 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { User, UserStatus } from '../users/entities/user.entity';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from '@pms/shared/contracts/auth/login.dto';
+import { RegisterDto } from '@pms/shared/contracts/auth/register.dto';
 import * as bcrypt from 'bcryptjs';
 
 export interface JwtPayload {

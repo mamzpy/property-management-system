@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Headers,
@@ -22,6 +23,11 @@ export class BookingController {
   @Get('pending')
   findPending() {
     return this.bookingService.findPending();
+  }
+
+  @Get('health')
+  health() {
+    return { status: 'ok', service: 'booking-service' };
   }
 
   @Post()
@@ -58,8 +64,9 @@ export class BookingController {
     return this.bookingService.reject(id, reason);
   }
 
-  @Get('health')
-  health() {
-    return { status: 'ok', service: 'booking-service' };
+  @Delete('reset/all')
+  async resetAll(): Promise<{ message: string }> {
+    await this.bookingService.resetAll();
+    return { message: 'All bookings cleared' };
   }
 }

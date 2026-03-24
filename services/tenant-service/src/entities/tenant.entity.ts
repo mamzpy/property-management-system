@@ -14,8 +14,8 @@ export class Tenant {
   @Column()
   userId: string;
 
-  @Column()
-  propertyId: number;
+  @Column({ type: 'varchar' })
+  propertyId: string;
 
   @Column({ nullable: true })
   firstName: string;
@@ -36,7 +36,7 @@ export class Tenant {
   emergencyPhone: string;
 
   @Column({ default: 'active' })
-  status: string; 
+  status: string;
 
   @CreateDateColumn()
   createdAt: Date;

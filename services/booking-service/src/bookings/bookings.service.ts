@@ -127,4 +127,8 @@ export class BookingService {
 
     return this.bookingRepository.save(booking);
   }
+  async resetAll(): Promise<void> {
+    await this.bookingRepository.query(`TRUNCATE TABLE bookings RESTART IDENTITY CASCADE`);
+    this.logger.log("Demo reset — all bookings cleared");
+  }
 }
