@@ -9,6 +9,7 @@ import {
   Request,
   HttpException,
   InternalServerErrorException,
+  UseGuards,
 } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
@@ -17,6 +18,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AxiosError } from 'axios';
 import { CreatePropertyDto } from '@pms/shared/contracts/property/create-property.dto';
 import { UpdatePropertyDto } from '@pms/shared/contracts/property/update-property.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from 'src/auth/user-role.enum';
 
 @ApiTags('Properties')
 @ApiBearerAuth()
@@ -81,6 +86,8 @@ export class PropertiesController {
   }
 
   // 🏠 CREATE PROPERTY
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post()
   async create(
     @Body() createPropertyDto: CreatePropertyDto,
@@ -103,6 +110,8 @@ export class PropertiesController {
   }
 
   // 🏠 UPDATE PROPERTY
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Put(':id')
   async update(
     @Param('id') id: string,
@@ -126,6 +135,8 @@ export class PropertiesController {
   }
 
   // 🏠 DELETE PROPERTY
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req): Promise<any> {
     return this.forwardRequest(
