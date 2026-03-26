@@ -2,49 +2,50 @@
 
 ## 🚀 Production-Grade Microservices Backend
 
-A scalable backend system for managing **rental properties, bookings, tenants, and maintenance workflows**.
+A scalable backend system for managing rental properties, bookings, tenants, and maintenance workflows.
 
 ---
 
 ## ⚙️ Tech Stack
 
-**NestJS · TypeScript · PostgreSQL · RabbitMQ · Redis · Docker · AWS EC2**
+NestJS · TypeScript · PostgreSQL · RabbitMQ · Redis · Docker · AWS EC2
 
 ---
 
 ## 🔗 Repository
 
-👉 https://github.com/mamzpy/property-management-system
+https://github.com/mamzpy/property-management-system
 
 ---
 
 ## 🌐 Live API
 
-🔍 **Swagger UI**  
+Swagger UI:  
 http://18.201.231.15:3000/api-docs  
 
 ---
 
-### 🔐 Demo Credentials
+## 🔐 Demo Credentials
 
-- **Email:** `demo@pms.com`  
-- **Password:** `Demo123!`  
+Email: `demo@pms.com`  
+Password: `Demo123!`  
 
-**How to test:**
-1. Login  
-2. Copy JWT token  
-3. Click **Authorize 🔒** in Swagger  
-4. Test endpoints  
+How to test:
+- Login  
+- Copy JWT  
+- Click Authorize 🔒  
+- Test endpoints  
 
 ---
 
- 🧠 Architecture
-                     +------------------------+
-                     |      API Gateway       |
-                     |        (Nginx)         |
-                     |         :3000          |
-                     +-----------+------------+
-                                 |
+## 🧠 Architecture
+
+```text
+                    +------------------------+
+                    |      API Gateway       |
+                    |         :3000          |
+                    +-----------+------------+
+                                |
      +---------------------------+-----------------------------+
      |            |              |              |              |
  +--------+   +----------+   +---------+   +----------+   +-------------+
@@ -55,8 +56,7 @@ http://18.201.231.15:3000/api-docs
      +----------------------+-------------------+---------------+
                             |
                 +-------------------------------+
-                |        PostgreSQL Cluster     |
-                |     (Dedicated DB per svc)    |
+                | PostgreSQL (DB per service)   |
                 +---------------+---------------+
                                 |
           +---------------------+----------------------+
@@ -71,17 +71,17 @@ http://18.201.231.15:3000/api-docs
                                               |      Outbox       |
                                               |   (Booking Svc)   |
                                               +-------------------+
-                                              
+```
+
 ---
 
 ## 📦 Key Features
 
-- Microservices architecture with **independent services and databases**  
-- JWT authentication & **RBAC (Admin / Tenant roles)**  
-- Event-driven communication using **RabbitMQ**  
-- Booking workflow with **asynchronous processing**  
-- **Outbox pattern** for reliable event publishing  
-- **Redis distributed locking** to prevent double-booking  
+- Microservices architecture with independent services and databases  
+- JWT authentication and RBAC  
+- Event-driven communication with RabbitMQ  
+- Outbox pattern for reliable event publishing  
+- Redis distributed locking to prevent double-booking  
 - Correlation ID tracing across services  
 - Dockerized deployment on AWS EC2  
 - Swagger/OpenAPI for API testing  
@@ -91,10 +91,10 @@ http://18.201.231.15:3000/api-docs
 
 ## 🔄 Booking Flow
 
-Tenant creates booking → **pending**  
-→ Event published (Outbox → RabbitMQ)  
+Tenant creates booking → pending  
+→ Outbox publishes event → RabbitMQ  
 → Property & Tenant services react  
-→ Admin approves → booking = **approved**, property updated  
+→ Admin approves → booking approved, property updated  
 
 ---
 
@@ -106,17 +106,21 @@ Tenant creates booking → **pending**
 ---
 
 ## 🐳 Run Locally
+
+```bash
 git clone https://github.com/mamzpy/property-management-system
 cd property-management-system
 docker compose up --build
+```
 
 Swagger:
 http://localhost:3000/api-docs
+
 ---
 
+## 📁 Project Structure
 
-📁 Project Structure
-
+```text
 property-management-system/
 ├── services/
 │   ├── api-gateway/
@@ -129,14 +133,15 @@ property-management-system/
 ├── docker-compose.yml
 ├── package.json
 └── README.md
+```
 
 ---
 
-👤 Author
-Mohammadreza Ghadarjani
-Backend Developer
-📧 m.reza.ghadarjani@gmail.com
-🐙 https://github.com/mamzpy
-📍 Turin, Italy
+## 👤 Author
 
+Mohammadreza Ghadarjani  
+Backend Developer  
 
+Email: m.reza.ghadarjani@gmail.com  
+GitHub: https://github.com/mamzpy  
+Location: Turin, Italy
